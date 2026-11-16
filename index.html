@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#263c38">
+<title>这就回家 · 第一章：世界的尽头，也是起点</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#141c22;font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#f3e9d2;overflow:hidden}
+#wrap{position:relative;width:100vw;height:100dvh;display:flex;align-items:center;justify-content:center;background:#0d1319}
+#stage{position:relative;width:min(100vw,164.7dvh);aspect-ratio:896/544;max-height:100dvh}
+canvas#game{width:100%;height:100%;display:block;image-rendering:pixelated;background:#79a85b}
+.hud{position:absolute;top:0;left:0;right:0;display:flex;gap:6px;align-items:center;padding:6px 8px;background:linear-gradient(180deg,rgba(20,16,10,.82),rgba(20,16,10,.55) 80%,transparent);font-size:clamp(10px,1.9vmin,15px);z-index:5;flex-wrap:wrap}
+.hud .chip{background:rgba(38,32,20,.85);border:1px solid #8a6d3b;border-radius:8px;padding:2px 8px;white-space:nowrap}
+.hud .bar{display:inline-block;width:52px;height:8px;background:#3a2f1d;border-radius:4px;vertical-align:middle;margin-left:4px;overflow:hidden}
+.hud .bar i{display:block;height:100%;background:linear-gradient(90deg,#e8b64c,#f6d47c)}
+#kneeChip{transition:transform .15s}
+.hud button{margin-left:auto;background:#8a6d3b;color:#fff;border:1px solid #c9a45c;border-radius:8px;padding:3px 10px;font-size:inherit;cursor:pointer}
+.hud button+button{margin-left:0}
+#dialog{position:absolute;left:3%;right:3%;bottom:2.5%;background:rgba(30,24,16,.96);border:2px solid #c9a45c;border-radius:12px;padding:12px 14px;z-index:8;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#dlgName{color:#f6d47c;font-weight:700;margin-bottom:4px;font-size:clamp(12px,2.2vmin,17px)}
+#dlgText{font-size:clamp(13px,2.4vmin,18px);line-height:1.55;min-height:2.6em;white-space:pre-wrap}
+#dlgHint{text-align:right;color:#bfae8d;font-size:clamp(10px,1.8vmin,13px);margin-top:2px}
+#choices{position:absolute;left:50%;transform:translateX(-50%);bottom:24%;display:none;flex-direction:column;gap:8px;z-index:9;width:min(92%,560px)}
+#choices button{background:rgba(38,32,20,.97);color:#f3e9d2;border:1px solid #c9a45c;border-radius:10px;padding:10px 14px;font-size:clamp(13px,2.4vmin,17px);text-align:left;cursor:pointer}
+#choices button:disabled{opacity:.55;cursor:default}
+#choices button:not(:disabled):active{background:#8a6d3b}
+.panel{position:absolute;inset:0;background:rgba(10,12,10,.72);display:none;align-items:center;justify-content:center;z-index:10}
+.panel .box{background:#241d12;border:2px solid #c9a45c;border-radius:14px;padding:18px;width:min(92%,560px);max-height:88%;overflow:auto}
+.panel h2{color:#f6d47c;font-size:clamp(16px,3vmin,22px);margin-bottom:10px}
+.panel p{line-height:1.6;font-size:clamp(13px,2.3vmin,16px);margin-bottom:8px}
+.panel .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.panel button{background:#8a6d3b;color:#fff;border:1px solid #c9a45c;border-radius:9px;padding:9px 14px;font-size:clamp(13px,2.3vmin,16px);cursor:pointer}
+.panel button.ghost{background:transparent;color:#f3e9d2}
+.panel button:disabled{opacity:.5}
+.wordgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.wordgrid .w{background:rgba(255,255,255,.06);border-radius:8px;padding:6px 9px;font-size:clamp(12px,2.2vmin,15px)}
+.wordgrid .w b{color:#f6d47c}
+.wordgrid .w.lock{opacity:.4}
+#toast{position:absolute;top:16%;left:50%;transform:translateX(-50%);background:rgba(30,24,16,.95);border:1px solid #f6d47c;color:#f6d47c;border-radius:10px;padding:8px 16px;font-size:clamp(13px,2.4vmin,17px);z-index:11;display:none;text-align:center;max-width:92%}
+#touch{position:absolute;inset:auto 0 0 0;display:none;justify-content:space-between;padding:0 14px 86px;z-index:6;pointer-events:none}
+#touch .pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:2px;pointer-events:auto}
+#touch button{background:rgba(38,32,20,.55);border:1px solid rgba(201,164,92,.8);color:#f3e9d2;border-radius:12px;font-size:20px;pointer-events:auto}
+#touch .acts{display:flex;flex-direction:column;gap:12px;justify-content:flex-end}
+#touch .acts button{width:60px;height:60px;border-radius:50%;font-size:15px}
+@media(pointer:coarse){#touch{display:flex}}
+#title{position:absolute;inset:0;background:linear-gradient(180deg,#1d2e44 0%,#4a2e3d 55%,#d97d45 130%);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+#title h1{font-size:clamp(30px,7vmin,54px);letter-spacing:.12em;color:#fdf6e0;text-shadow:0 3px 0 #855243}
+#title h3{margin-top:8px;color:#f6d47c;font-weight:400;font-size:clamp(14px,2.8vmin,20px)}
+#title p{margin-top:14px;color:#e8dcc0;max-width:520px;line-height:1.7;font-size:clamp(12px,2.3vmin,16px)}
+#title .row{display:flex;gap:12px;margin-top:22px}
+#title button{background:#8a6d3b;color:#fff;border:1px solid #f6d47c;border-radius:10px;padding:12px 26px;font-size:clamp(15px,2.8vmin,19px);cursor:pointer}
+#title button.ghost{background:transparent}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+<canvas id="game" width="896" height="544"></canvas>
+<div class="hud" id="hud" style="display:none">
+  <span class="chip" id="hudDay">第 1 天</span>
+  <span class="chip" id="hudPlace">蓬塔阿雷纳斯</span>
+  <span class="chip" id="hudWeather">☀ 晴</span>
+  <span class="chip" id="kneeChip">🦵 膝盖：不疼</span>
+  <span class="chip">⚡体力<span class="bar"><i id="barSta"></i></span> <b id="hudSta">100</b></span>
+  <span class="chip">🍞食物 <b id="hudFood">8</b></span>
+  <span class="chip">💰 <b id="hudMoney">15000</b></span>
+  <span class="chip">😊心情 <b id="hudMood">70</b></span>
+  <button id="btnWords">📖 词库</button>
+  <button id="btnCamp">⛺ 扎营</button>
+  <button id="btnSave">💾 存档</button>
+</div>
+<div id="toast"></div>
+<div id="dialog"><div id="dlgName"></div><div id="dlgText"></div><div id="dlgHint">点击 / 按 A 继续 ▸</div></div>
+<div id="choices"></div>
+<div class="panel" id="panel"><div class="box" id="panelBox"></div></div>
+<div id="touch">
+  <div class="pad">
+    <span></span><button data-dir="up">▲</button><span></span>
+    <button data-dir="left">◀</button><span></span><button data-dir="right">▶</button>
+    <span></span><button data-dir="down">▼</button><span></span>
+  </div>
+  <div class="acts"><button id="btnB">词库</button><button id="btnA">互动</button></div>
+</div>
+<div id="title">
+  <h1>这 就 回 家</h1>
+  <h3>第一章 · 世界的尽头，也是起点</h3>
+  <p>你在智利最南端的蓬塔阿雷纳斯醒来，膝盖里装着一场旧雨，背包里装着全部家当。<br>往北 250 公里是纳塔莱斯港，再往北，是回英国的路。<br>你不会说西班牙语。但你得活下去，还得走下去。</p>
+  <div class="row"><button id="btnNew">新的旅程</button><button id="btnContinue" class="ghost">继续旅程</button></div>
+  <p style="margin-top:16px;font-size:12px;opacity:.75">操作：WASD / 方向键走动，空格或 A 键互动；手机用虚拟方向键。<br>策划 ChatGPT · 数据 DeepSeek · 美术 Gemini · 组装 Muse</p>
+</div>
+</div></div>
+<script>
+"use strict";
+/* ================= 工具 ================= */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const TILE=32, VIEW_W=896, VIEW_H=544;
+/* ================= 词库（24 词） ================= */
+const WORDS={
+hola:{es:"Hola",zh:"你好"},gracias:{es:"Gracias",zh:"谢谢"},por_favor:{es:"Por favor",zh:"请 / 拜托"},pan:{es:"Pan",zh:"面包"},no_entiendo:{es:"No entiendo",zh:"我听不懂"},
+agua:{es:"Agua",zh:"水"},donde:{es:"¿Dónde está…?",zh:"……在哪里？"},camino:{es:"Camino",zh:"路"},cuanto:{es:"¿Cuánto cuesta?",zh:"多少钱？"},
+trabajo:{es:"Trabajo",zh:"工作"},dinero:{es:"Dinero",zh:"钱"},ayuda:{es:"Ayuda",zh:"帮助"},lo_siento:{es:"Lo siento",zh:"对不起"},
+lluvia:{es:"Lluvia",zh:"雨"},frio:{es:"Frío",zh:"冷"},casa:{es:"Casa",zh:"家 / 房子"},
+viento:{es:"Viento",zh:"风"},peligro:{es:"Peligro",zh:"危险"},despacio:{es:"Despacio",zh:"慢一点"},
+amigo:{es:"Amigo",zh:"朋友"},manana:{es:"Mañana",zh:"明天"},hasta_luego:{es:"Hasta luego",zh:"待会儿见"},
+adios:{es:"Adiós",zh:"再见"},buen_viaje:{es:"Buen viaje",zh:"一路顺风"}};
+const DS_EVENTS = {"day1_wake_forecast": {"id": "day1_wake_forecast", "title": "醒来与天气预报", "day": 1, "scene": "蓬塔阿雷纳斯·旅舍房间", "trigger": {"type": "auto", "note": "Day1 开局自动触发，教学预报"}, "lines": [{"who": "旁白", "text": "清晨六点，蓬塔阿雷桑斯的窗户被风拍得哐哐响。你膝盖旧伤隐隐发酸。"}, {"who": "老托马斯", "text": "今天风大，午后可能有雨。走路当心，别逞强。"}, {"who": "你", "text": "（教学：天气预报会影响当天体力消耗与关节疼痛。先记下：风大、午后雨。）"}], "choices": [{"text": "记下预报，出门。", "effects": {}, "next": "day1_meet_sofia", "reply": "老托马斯点点头：路上慢点。"}], "once": true}, "day1_meet_sofia": {"id": "day1_meet_sofia", "title": "遇见索菲娅", "day": 1, "scene": "蓬塔阿雷纳斯·街角", "trigger": {"type": "talk", "npc": "索菲娅", "note": "首次与索菲娅对话"}, "lines": [{"who": "索菲娅", "text": "Hola（你好）！你是新来的旅行者吗？我叫索菲娅。"}, {"who": "你", "text": "你好……我叫……（一时不知道怎么用西语回应）"}, {"who": "索菲娅", "text": "跟我念：Hola。就是“你好”。"}], "choices": [{"text": "Hola（你好）！", "effects": {"mood": 3}, "reply": "索菲娅笑了：发音不错！"}], "once": true, "learnWord": "hola"}, "day1_bakery": {"id": "day1_bakery", "title": "玛尔塔的面包店", "day": 1, "scene": "蓬塔阿雷纳斯·面包店", "trigger": {"type": "talk", "npc": "玛尔塔", "note": "进入面包店"}, "lines": [{"who": "玛尔塔", "text": "早上好，旅行者。要面包吗？Pan（面包）。"}, {"who": "你", "text": "我……想买一个。多少钱？"}, {"who": "玛尔塔", "text": "五百比索。买的时候可以说：Por favor（请）。接过找零说 Gracias（谢谢）。"}], "choices": [{"text": "Por favor（请），来一个 Pan（面包）。", "effects": {"money": -500, "food": 1}, "reply": "玛尔塔：Gracias（谢谢）惠顾！"}, {"text": "只学说法，不买。", "effects": {}, "reply": "玛尔塔：没关系，Gracias 也送你。"}], "once": true, "learnWord": "gracias"}, "day1_flashback": {"id": "day1_flashback", "title": "膝盖受伤的闪回", "day": 1, "scene": "蓬塔阿雷纳斯·石阶", "trigger": {"type": "step", "note": "走过石阶时触发"}, "lines": [{"who": "旁白", "text": "脚下一滑，膝盖传来熟悉的刺痛。你想起多年前那次摔倒——周围的人说着你听不懂的话。"}, {"who": "路人", "text": "¿Estás bien?（你还好吗？）"}, {"who": "你", "text": "我……No entiendo（我不懂）。"}], "choices": [{"text": "用 No entiendo（我不懂）回应。", "effects": {"stamina": -3, "mood": -2}, "reply": "路人放慢语速，指了指你的膝盖。"}], "once": true, "learnWord": "no_entiendo"}, "day1_pan_learn": {"id": "day1_pan_learn", "title": "补学 Pan", "day": 1, "scene": "蓬塔阿雷纳斯·面包店", "trigger": {"type": "talk", "npc": "玛尔塔", "note": "day1_bakery 完成后再次对话"}, "lines": [{"who": "玛尔塔", "text": "再教你一个词：Pan，就是面包。"}, {"who": "你", "text": "Pan（面包）。"}], "choices": [{"text": "Pan（面包）。", "effects": {}, "reply": "玛尔塔：对，Pan。"}], "once": true, "learnWord": "pan"}, "day1_por_favor_learn": {"id": "day1_por_favor_learn", "title": "补学 Por favor", "day": 1, "scene": "蓬塔阿雷纳斯·面包店", "trigger": {"type": "talk", "npc": "玛尔塔", "note": "day1_bakery 完成后再次对话"}, "lines": [{"who": "玛尔塔", "text": "请人帮忙时要说：Por favor（请）。"}, {"who": "你", "text": "Por favor（请）。"}], "choices": [{"text": "Por favor（请）。", "effects": {}, "reply": "玛尔塔：很好，Por favor。"}], "once": true, "learnWord": "por_favor"}, "H1_share_bread": {"id": "H1_share_bread", "title": "分面包", "day": 1, "scene": "蓬塔阿雷纳斯·街边", "trigger": {"type": "talk", "npc": "索菲娅", "note": "day1_meet_sofia 完成后触发"}, "lines": [{"who": "索菲娅", "text": "你手里有面包……我弟弟今天还没吃东西。"}, {"who": "你", "text": "（她看着我，眼神很小心。）"}], "choices": [{"text": "分一半给她。", "effects": {"food": -1, "mood": 5}, "memory": "sofia_helped", "reply": "索菲娅：Gracias（谢谢）！"}, {"text": "不分。", "effects": {"mood": -3}, "reply": "索菲娅低下头，慢慢走开了。"}, {"text": "Por favor（请）让我分给你。", "needWord": "por_favor", "effects": {"mood": 8}, "memory": "sofia_helped", "reply": "索菲娅愣了一下，笑得特别亮。"}], "once": true}, "day2_road": {"id": "day2_road", "title": "问路去纳塔莱斯港", "day": 2, "scene": "蓬塔阿雷纳斯·公路岔口", "trigger": {"type": "talk", "npc": "豪尔赫", "note": "Day2 公路边遇到豪尔赫"}, "lines": [{"who": "豪尔赫", "text": "你要去纳塔莱斯港？先沿着 Camino（路）走。"}, {"who": "你", "text": "¿Dónde está?（在哪里？）……我是说，水在哪里？"}, {"who": "豪尔赫", "text": "Agua（水）在前面的小店。记住：¿Dónde está? 是“在哪里”。"}], "choices": [{"text": "Agua（水），¿Dónde está?（在哪里？）", "effects": {"stamina": -3}, "reply": "豪尔赫指了指前方：Camino（路）一直走。"}], "once": true, "learnWord": "agua"}, "day2_donde_learn": {"id": "day2_donde_learn", "title": "补学问路说法", "day": 2, "scene": "蓬塔阿雷纳斯·公路岔口", "trigger": {"type": "talk", "npc": "豪尔赫", "note": "day2_road 完成后再次对话"}, "lines": [{"who": "豪尔赫", "text": "问路就说：¿Dónde está?（在哪里？）"}, {"who": "你", "text": "¿Dónde está?（在哪里？）"}], "choices": [{"text": "¿Dónde está?（在哪里？）", "effects": {}, "reply": "豪尔赫：对，就这样问。"}], "once": true, "learnWord": "donde"}, "day2_camino_learn": {"id": "day2_camino_learn", "title": "补学 Camino", "day": 2, "scene": "蓬塔阿雷纳斯·公路岔口", "trigger": {"type": "talk", "npc": "豪尔赫", "note": "day2_road 完成后再次对话"}, "lines": [{"who": "豪尔赫", "text": "Camino，就是路。"}, {"who": "你", "text": "Camino（路）。"}], "choices": [{"text": "Camino（路）。", "effects": {}, "reply": "豪尔赫：沿着 Camino 走就对了。"}], "once": true, "learnWord": "camino"}, "day2_shop": {"id": "day2_shop", "title": "小卖部", "day": 2, "scene": "蓬塔阿雷纳斯·小卖部", "trigger": {"type": "talk", "npc": "店主", "note": "进入小卖部"}, "lines": [{"who": "店主", "text": "要买什么？水、面包都有。"}, {"who": "你", "text": "¿Cuánto cuesta?（多少钱？）"}], "choices": [{"text": "¿Cuánto cuesta?（多少钱？）买水。", "effects": {"money": -300, "food": 1, "stamina": 3}, "reply": "店主：三百比索，Agua（水）拿走。"}, {"text": "只问价不买。", "effects": {}, "reply": "店主耸耸肩：问价免费。"}], "once": true, "learnWord": "cuanto"}, "H2_road_wallet": {"id": "H2_road_wallet", "title": "路上的钱包", "day": 3, "scene": "蓬塔阿雷纳斯郊外·土路", "trigger": {"type": "step", "note": "Day3 走路途中触发"}, "lines": [{"who": "旁白", "text": "路边草丛里有个旧钱包。打开一看，里面有 8000 比索和一张身份证。"}, {"who": "你", "text": "（失主一定很着急。）"}], "choices": [{"text": "交还给失主。", "effects": {"mood": 3}, "memory": "wallet_returned", "reply": "失主赶来，连声道谢。"}, {"text": "留下钱。", "effects": {"money": 8000, "mood": -5}, "memory": "wallet_kept", "reply": "你把钱包塞进包里，心里有点沉。"}, {"text": "次日还回去并道歉。", "needWord": "lo_siento", "effects": {"mood": 2}, "memory": "wallet_apologized", "reply": "失主收下钱包：没关系，谢谢你送回来。"}], "once": true}, "day3_farm_work": {"id": "day3_farm_work", "title": "埃琳娜的农场帮工", "day": 3, "scene": "纳塔莱斯港郊外·农场", "trigger": {"type": "talk", "npc": "埃琳娜", "note": "到达农场"}, "lines": [{"who": "埃琳娜", "text": "想挣点路费吗？帮我干半天活。"}, {"who": "你", "text": "Trabajo（工作）……Dinero（钱）……Ayuda（帮忙）？"}, {"who": "埃琳娜", "text": "哈哈，你说得对：Trabajo 是工作，Dinero 是钱，Ayuda 是帮忙。"}], "choices": [{"text": "好，我帮你。", "effects": {"stamina": -15, "money": 3000, "food": 1}, "reply": "埃琳娜：干得不错，这是工钱。"}], "once": true, "learnWord": "trabajo"}, "day3_dinero_learn": {"id": "day3_dinero_learn", "title": "补学 Dinero", "day": 3, "scene": "纳塔莱斯港郊外·农场", "trigger": {"type": "talk", "npc": "埃琳娜", "note": "day3_farm_work 完成后再次对话"}, "lines": [{"who": "埃琳娜", "text": "Dinero，钱。买面包住宿都要用。"}, {"who": "你", "text": "Dinero（钱）。"}], "choices": [{"text": "Dinero（钱）。", "effects": {}, "reply": "埃琳娜：对，Dinero。"}], "once": true, "learnWord": "dinero"}, "day3_ayuda_learn": {"id": "day3_ayuda_learn", "title": "补学 Ayuda", "day": 3, "scene": "纳塔莱斯港郊外·农场", "trigger": {"type": "talk", "npc": "埃琳娜", "note": "day3_farm_work 完成后再次对话"}, "lines": [{"who": "埃琳娜", "text": "需要人帮忙就说 Ayuda（帮忙）。"}, {"who": "你", "text": "Ayuda（帮忙）。"}], "choices": [{"text": "Ayuda（帮忙）。", "effects": {}, "reply": "埃琳娜：Ayuda，记住了。"}], "once": true, "learnWord": "ayuda"}, "day3_lo_siento_learn": {"id": "day3_lo_siento_learn", "title": "补学 Lo siento", "day": 3, "scene": "纳塔莱斯港·旅舍", "trigger": {"type": "talk", "npc": "老托马斯", "note": "Day3 旅舍对话"}, "lines": [{"who": "老托马斯", "text": "做错事要道歉，说 Lo siento（对不起）。"}, {"who": "你", "text": "Lo siento（对不起）。"}], "choices": [{"text": "Lo siento（对不起）。", "effects": {}, "reply": "老托马斯：Lo siento，很好。"}], "once": true, "learnWord": "lo_siento"}, "day4_rain_night": {"id": "day4_rain_night", "title": "雨夜", "day": 4, "scene": "纳塔莱斯港·旅舍屋檐下", "trigger": {"type": "auto", "note": "Day4 入夜自动触发"}, "lines": [{"who": "旁白", "text": "雨下了一整天。Lluvia（雨）敲着铁皮屋顶，Frío（冷）从门缝钻进来。"}, {"who": "阿图罗", "text": "孩子，进来吧，Casa（家）里暖和。"}, {"who": "你", "text": "Lluvia（雨）……Frío（冷）……Casa（家）。"}], "choices": [{"text": "进屋躲雨。", "effects": {"stamina": 5, "mood": 2}, "reply": "阿图罗给你倒了杯热水。"}], "once": true, "learnWord": "lluvia"}, "day4_frio_learn": {"id": "day4_frio_learn", "title": "补学 Frío", "day": 4, "scene": "纳塔莱斯港·旅舍屋檐下", "trigger": {"type": "talk", "npc": "阿图罗", "note": "day4_rain_night 完成后再次对话"}, "lines": [{"who": "阿图罗", "text": "Frío，就是冷。雨夜最容易 Frío。"}, {"who": "你", "text": "Frío（冷）。"}], "choices": [{"text": "Frío（冷）。", "effects": {}, "reply": "阿图罗：对，Frío。"}], "once": true, "learnWord": "frio"}, "day4_casa_learn": {"id": "day4_casa_learn", "title": "补学 Casa", "day": 4, "scene": "纳塔莱斯港·旅舍屋檐下", "trigger": {"type": "talk", "npc": "阿图罗", "note": "day4_rain_night 完成后再次对话"}, "lines": [{"who": "阿图罗", "text": "Casa，家。出门在外，有个 Casa 很重要。"}, {"who": "你", "text": "Casa（家）。"}], "choices": [{"text": "Casa（家）。", "effects": {}, "reply": "阿图罗：Casa，记住了。"}], "once": true, "learnWord": "casa"}, "H4_blanket": {"id": "H4_blanket", "title": "毯子", "day": 4, "scene": "纳塔莱斯港·旅舍大厅", "trigger": {"type": "talk", "npc": "阿图罗", "note": "day4_rain_night 之后"}, "lines": [{"who": "旁白", "text": "旅舍只有一条毯子。阿图罗老人坐在角落里发抖。"}, {"who": "阿图罗", "text": "你年轻，扛得住……我这条老骨头不行了。"}], "choices": [{"text": "把毯子让给老人。", "effects": {"mood": 4}, "memory": "blanket_given", "reply": "阿图罗裹紧毯子：谢谢你，孩子。"}, {"text": "自己用。", "effects": {"mood": -2}, "reply": "你裹着毯子，却听见老人轻轻咳嗽。"}, {"text": "Frío（冷）……我们分一半吧。", "needWord": "frio", "effects": {"mood": 6}, "memory": "blanket_shared", "reply": "阿图罗笑了：分一半，暖和。"}], "once": true}, "day4_knee_pain_night": {"id": "day4_knee_pain_night", "title": "雨夜膝盖剧痛", "day": 4, "scene": "纳塔莱斯港·旅舍房间", "trigger": {"type": "auto", "note": "Day4 深夜自动触发，文本按 H4 选择变化"}, "lines": [{"who": "旁白", "text": "半夜，膝盖像被钉子扎。你想起白天的雨和冷。"}, {"who": "旁白", "text": "【分支：若 memory=blanket_given】老人把毯子盖回你腿上：“你让了我，现在轮到我。”你喝到一杯热牛奶，疼痛缓了些。"}, {"who": "旁白", "text": "【分支：若 memory=blanket_shared】你们分过的毯子还在，阿图罗端来热牛奶：“分一半的人，也该分一半暖和。”"}, {"who": "旁白", "text": "【分支：无上述 memory 或 blanket_self】没有人来。你自己爬起来，用热水敷膝盖，疼得睡不着。"}], "choices": [{"text": "忍着，继续睡。", "effects": {"stamina": -5, "mood": -2}, "reply": "疼痛慢慢退去，天也快亮了。"}], "once": true}, "day2_forecast_proved": {"id": "day2_forecast_proved", "title": "预报应验", "day": 2, "scene": "蓬塔阿雷纳斯·公路", "trigger": {"type": "auto", "note": "Day2 午后自动触发"}, "lines": [{"who": "旁白", "text": "午后果然起风下雨。你想起老托马斯早上的话，提前找了屋檐。"}, {"who": "你", "text": "（预报是真的。）"}], "choices": [{"text": "庆幸自己听了预报。", "effects": {"mood": 3}, "reply": "你躲过一场雨，心情不错。"}], "once": true}, "day5_wind": {"id": "day5_wind", "title": "隘口的风", "day": 5, "scene": "纳塔莱斯港外·山口", "trigger": {"type": "talk", "npc": "佩德罗", "note": "Day5 山口遇到佩德罗"}, "lines": [{"who": "佩德罗", "text": "Viento（风）太大了，Peligro（危险）！走慢点，Despacio（慢）。"}, {"who": "你", "text": "Viento（风）……Peligro（危险）……Despacio（慢）。"}], "choices": [{"text": "Despacio（慢）点走。", "effects": {"stamina": -3, "mood": 2}, "reply": "佩德罗：对，Despacio。"}], "once": true, "learnWord": "viento"}, "day5_peligro_learn": {"id": "day5_peligro_learn", "title": "补学 Peligro", "day": 5, "scene": "纳塔莱斯港外·山口", "trigger": {"type": "talk", "npc": "佩德罗", "note": "day5_wind 完成后再次对话"}, "lines": [{"who": "佩德罗", "text": "Peligro，危险。风大时别靠近崖边。"}, {"who": "你", "text": "Peligro（危险）。"}], "choices": [{"text": "Peligro（危险）。", "effects": {}, "reply": "佩德罗：对，Peligro。"}], "once": true, "learnWord": "peligro"}, "day5_despacio_learn": {"id": "day5_despacio_learn", "title": "补学 Despacio", "day": 5, "scene": "纳塔莱斯港外·山口", "trigger": {"type": "talk", "npc": "佩德罗", "note": "day5_wind 完成后再次对话"}, "lines": [{"who": "佩德罗", "text": "Despacio，慢。风里走路要 Despacio。"}, {"who": "你", "text": "Despacio（慢）。"}], "choices": [{"text": "Despacio（慢）。", "effects": {}, "reply": "佩德罗：对，Despacio。"}], "once": true, "learnWord": "despacio"}, "H3_hitchhike": {"id": "H3_hitchhike", "title": "搭车", "day": 5, "scene": "纳塔莱斯港外·公路", "trigger": {"type": "talk", "npc": "豪尔赫", "note": "Day5 豪尔赫的卡车停下"}, "lines": [{"who": "豪尔赫", "text": "上来吧，我载你一段。风太大了。"}, {"who": "你", "text": "（卡车斗里全是风。）"}], "choices": [{"text": "搭车。", "effects": {"stamina": 20, "mood": -2}, "memory": "took_ride", "reply": "豪尔赫：坐稳了！"}, {"text": "拒绝，自己走。", "effects": {"stamina": -15, "mood": 5}, "reply": "豪尔赫耸耸肩：那你保重。"}, {"text": "Despacio（慢）点开，我挡风。", "needWord": "despacio", "effects": {"stamina": -5, "mood": 5}, "memory": "jorge_shield", "reply": "豪尔赫放慢车速：你这人真有意思。"}], "once": true}, "day6_night_talk": {"id": "day6_night_talk", "title": "夜话", "day": 6, "scene": "纳塔莱斯港·篝火旁", "trigger": {"type": "talk", "npc": "露西娅", "note": "Day6 夜晚篝火"}, "lines": [{"who": "露西娅", "text": "Amigo（朋友），明天 Mañana（明天）你就要走了吧？"}, {"who": "你", "text": "Amigo（朋友）……Mañana（明天）……Hasta luego（回头见）。"}, {"who": "露西娅", "text": "对，Hasta luego，回头见。"}], "choices": [{"text": "Amigo（朋友），Mañana（明天）见。", "effects": {"mood": 4}, "reply": "露西娅笑着碰了碰你的杯子。"}], "once": true, "learnWord": "amigo"}, "day6_manana_learn": {"id": "day6_manana_learn", "title": "补学 Mañana", "day": 6, "scene": "纳塔莱斯港·篝火旁", "trigger": {"type": "talk", "npc": "露西娅", "note": "day6_night_talk 完成后再次对话"}, "lines": [{"who": "露西娅", "text": "Mañana，明天。也可以指上午。"}, {"who": "你", "text": "Mañana（明天）。"}], "choices": [{"text": "Mañana（明天）。", "effects": {}, "reply": "露西娅：对，Mañana。"}], "once": true, "learnWord": "manana"}, "day6_hasta_luego_learn": {"id": "day6_hasta_luego_learn", "title": "补学 Hasta luego", "day": 6, "scene": "纳塔莱斯港·篝火旁", "trigger": {"type": "talk", "npc": "露西娅", "note": "day6_night_talk 完成后再次对话"}, "lines": [{"who": "露西娅", "text": "告别说 Hasta luego（回头见）。"}, {"who": "你", "text": "Hasta luego（回头见）。"}], "choices": [{"text": "Hasta luego（回头见）。", "effects": {}, "reply": "露西娅：Hasta luego。"}], "once": true, "learnWord": "hasta_luego"}, "H5_last_bread": {"id": "H5_last_bread", "title": "最后一块面包", "day": 6, "scene": "纳塔莱斯港·篝火旁", "trigger": {"type": "talk", "npc": "露西娅", "note": "day6_night_talk 之后"}, "lines": [{"who": "旁白", "text": "包里只剩最后一块面包。露西娅的肚子叫了一声。"}, {"who": "露西娅", "text": "没事，我不饿。"}], "choices": [{"text": "分给她。", "effects": {"food": -1, "mood": 6}, "memory": "bread_shared", "reply": "露西娅：谢谢你，朋友。"}, {"text": "不分。", "effects": {"mood": -4}, "reply": "你背过身吃掉面包，心里不是滋味。"}, {"text": "Amigo（朋友），一起吃。", "needWord": "amigo", "effects": {"mood": 8}, "memory": "bread_amigo", "reply": "露西娅大笑：Amigo！"}], "once": true}, "day7_farewell": {"id": "day7_farewell", "title": "码头告别", "day": 7, "scene": "纳塔莱斯港·码头", "trigger": {"type": "talk", "npc": "卡洛斯", "note": "Day7 码头"}, "lines": [{"who": "卡洛斯", "text": "船要开了。Adiós（再见），Buen viaje（一路顺风）。"}, {"who": "你", "text": "Adiós（再见）……Buen viaje（一路顺风）。"}], "choices": [{"text": "Adiós，Buen viaje。", "effects": {"mood": 5}, "reply": "卡洛斯挥手：Buen viaje！"}], "once": true, "learnWord": "adios"}, "day7_buen_viaje_learn": {"id": "day7_buen_viaje_learn", "title": "补学 Buen viaje", "day": 7, "scene": "纳塔莱斯港·码头", "trigger": {"type": "talk", "npc": "卡洛斯", "note": "day7_farewell 完成后再次对话"}, "lines": [{"who": "卡洛斯", "text": "送人远行说 Buen viaje，一路顺风。"}, {"who": "你", "text": "Buen viaje（一路顺风）。"}], "choices": [{"text": "Buen viaje（一路顺风）。", "effects": {}, "reply": "卡洛斯：Buen viaje。"}], "once": true, "learnWord": "buen_viaje"}, "day7_ending": {"id": "day7_ending", "title": "码头结尾", "day": 7, "scene": "纳塔莱斯港·码头", "trigger": {"type": "auto", "note": "Day7 学完 farewell 后自动触发，按 memories 汇总"}, "lines": [{"who": "旁白", "text": "船笛响了。你回头看了一眼这七天走过的路。"}, {"who": "旁白", "text": "【cond: memory=sofia_helped】索菲娅跑来，塞给你一小包饼干：“Hola，朋友！”"}, {"who": "旁白", "text": "【cond: memory=wallet_returned】失主站在人群里，朝你举了举帽子。"}, {"who": "旁白", "text": "【cond: memory=wallet_kept】你摸了摸口袋，那 8000 比索还在，但心里空了一块。"}, {"who": "旁白", "text": "【cond: memory=wallet_apologized】失主寄来一封信：“Lo siento 说出口的人，值得信任。”"}, {"who": "旁白", "text": "【cond: memory=blanket_given】阿图罗托人带来一条旧毯子：“路上冷。”"}, {"who": "旁白", "text": "【cond: memory=blanket_shared】阿图罗在信里写：“分一半的人，走到哪里都不孤单。”"}, {"who": "旁白", "text": "【cond: memory=took_ride】豪尔赫的卡车在远处按了两声喇叭。"}, {"who": "旁白", "text": "【cond: memory=jorge_shield】豪尔赫喊：“Despacio！下次还坐我的车！”"}, {"who": "旁白", "text": "【cond: memory=bread_shared 或 memory=bread_amigo】露西娅在岸上挥手：“Amigo！Hasta luego！”"}, {"who": "旁白", "text": "【成就：若 memories 中含 sofia_helped、wallet_returned、blanket_given、bread_shared 中至少 3 个 → 解锁“蓬塔阿雷纳斯的好人”】"}], "choices": [{"text": "上船。", "effects": {"mood": 10}, "reply": "Adiós，蓬塔阿雷纳斯。Buen viaje，下一章。"}], "once": true}, "R1_wildflower": {"id": "R1_wildflower", "title": "野花", "day": 2, "scene": "蓬塔阿雷纳斯·路边", "trigger": {"type": "step", "note": "随机事件，走路时触发"}, "lines": [{"who": "旁白", "text": "路边开着一丛不知名的野花，风一吹就晃。"}], "choices": [{"text": "采一朵。", "effects": {"mood": 2}, "reply": "你把花别在包上，心情好了点。"}], "once": true}, "R2_lost_sheep": {"id": "R2_lost_sheep", "title": "迷路的羊", "day": 3, "scene": "纳塔莱斯港郊外·草场", "trigger": {"type": "step", "note": "随机事件"}, "lines": [{"who": "旁白", "text": "一只羊卡在铁丝网边，咩咩直叫。"}], "choices": [{"text": "帮它解开。", "effects": {"stamina": -3, "mood": 3}, "reply": "羊跑了，你拍了拍手上的土。"}, {"text": "不管。", "effects": {}, "reply": "你走开了，羊叫声越来越远。"}], "once": true}, "R3_parrot": {"id": "R3_parrot", "title": "鹦鹉", "day": 4, "scene": "纳塔莱斯港·旅舍院子", "trigger": {"type": "step", "note": "随机事件"}, "lines": [{"who": "旁白", "text": "一只鹦鹉落在晾衣绳上，冲你歪头。"}], "choices": [{"text": "逗它玩。", "effects": {"mood": 4}, "reply": "鹦鹉学舌：“Hola！Hola！”"}], "once": true}, "R4_shoelace": {"id": "R4_shoelace", "title": "鞋带", "day": 5, "scene": "纳塔莱斯港外·山路", "trigger": {"type": "step", "note": "随机事件"}, "lines": [{"who": "旁白", "text": "鞋带松了，你低头看了一眼。"}], "choices": [{"text": "不管，继续走。", "effects": {"stamina": -5, "mood": -2}, "reply": "你绊了一下，膝盖磕在石头上。"}, {"text": "蹲下系好。", "effects": {}, "reply": "你系好鞋带，继续赶路。"}], "once": true}, "R5_apple_tree": {"id": "R5_apple_tree", "title": "苹果树", "day": 6, "scene": "纳塔莱斯港·路边果园", "trigger": {"type": "step", "note": "随机事件"}, "lines": [{"who": "旁白", "text": "路边一棵苹果树，果子熟得发红。"}], "choices": [{"text": "摘几个。", "effects": {"food": 2, "mood": 2}, "reply": "你摘了苹果，塞进包里。"}, {"text": "不摘，留给别人。", "effects": {"mood": 3}, "reply": "你看了两眼，走了。"}], "once": true}, "R6_stars": {"id": "R6_stars", "title": "星空", "day": 6, "scene": "纳塔莱斯港·营地", "trigger": {"type": "auto", "note": "随机事件，夜晚触发"}, "lines": [{"who": "旁白", "text": "这里的夜空低得吓人，星星铺满头顶。"}], "choices": [{"text": "看一会儿星星。", "effects": {"mood": 5}, "reply": "你躺下来，忘了膝盖的疼。"}], "once": true}};
+
+/* ================= 场景数据 =================
+图例: . 草地 , 草地2 R 土路 S 石板 W 水(阻挡) T 树(阻挡) H 房(阻挡) D 门面 F 栅栏(阻挡) C 岩石(阻挡) B 桥 P 广场石板 G 碎石 */
+const SOLID=new Set(["W","T","H","F","C"]);
+const SCENES={
+town:{name:"蓬塔阿雷纳斯",sleep:"hostel",sleepLabel:"青年旅舍",exitHint:"沿 Ruta 9 向北出城",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....,,,,...RR...,....TTTTTT",
+"T.HHHH......RR......HHHHTT..",
+"T.HHHH..PPPPRRPPPP..HHHHTT..",
+"T..DD...PPPPRRPPPP...DD..T..",
+"T.......PPPPRRPPPP.......T..",
+"T.HHH...PPPPRRPPPP....TTTT..",
+"T.HHH.....PPRRPP......,..,T.",
+"T..D........RR....HHHH...T..",
+"T.....,.....RR....HHHH.TTT..",
+"T.HHHHH.....RR.....DD......T",
+"T.HHHHH..SSSSSS......,.....T",
+"T..DD....SSSSSS...HHHHHH...T",
+"T........SSSSSS...HHHHHH.T..",
+"T..,.....RRRRRR......DD....T",
+"T........RWWRR......,......T",
+"TTTTTTTTTRWWWRTTTTTTTTTTTTTT"],
+npcs:[
+{id:"tomas",name:"老托马斯",x:6,y:4,body:"#3f6185",hair:"#d8d8d8",chain:["day1_flashback"],ambient:"托马斯：膝盖比天气预报准，孩子。走路别逞强，风会替你记账。"},
+{id:"marta",name:"玛尔塔",x:22,y:4,body:"#b85c4f",hair:"#4a2c20",chain:["day1_bakery","day1_por_favor_learn"],ambient:"玛尔塔：¡Ay, mi niño! 面包 300 比索一个，要买就说话，别光站着闻味儿。"},
+{id:"sofia",name:"索菲娅",x:14,y:7,body:"#c94f6d",hair:"#2e1c12",chain:["day1_meet_sofia","H1_share_bread"],ambient:"索菲娅：¿Quieres jugar?（要一起玩吗？）等你学会更多词，我再跟你说我弟弟的事。"}],
+spots:[
+{x:21,y:5,kind:"shelf",label:"面包货架",event:"day1_pan_learn"},
+{x:14,y:15,kind:"view",label:"港口眺望",lines:[{who:"旁白",text:"麦哲伦海峡的风把海水吹成灰蓝色。对岸就是火地岛，再往南，只有南极了。"},{who:"你",text:"（从世界尽头出发。挺好，哪里都是前方。）"}],effects:{mood:5}},
+{x:5,y:11,kind:"view",label:"老教堂",lines:[{who:"旁白",text:"木头教堂的钟敲了六下。鸽子扑棱棱飞起来，又落回屋顶。"}],effects:{mood:2}},
+{x:8,y:12,kind:"shop",label:"市场摊位",lines:[{who:"旁白",text:"摊位上堆着苹果、奶酪和手工围巾。摊主朝你比了个手势：看看可以，不买也行。"}],effects:{}},
+{x:26,y:13,kind:"view",label:"彩色小屋",lines:[{who:"旁白",text:"铁皮小屋刷成蓝的、粉的、黄的。巴塔哥尼亚人用颜色对抗冬天，这你懂。"}],effects:{mood:2}}],
+exit:{x1:12,x2:13,y:0}},
+road:{name:"Ruta 9 · 出城土路",sleep:"camp",sleepLabel:"卡车休息站",exitHint:"继续向北，到卡车休息站过夜",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....,,,,...RR...,....TTTTTT",
+"T..,........RR......,....T..",
+"T......RRRRRRR....TTTT.....T",
+"T......R....RR........,....T",
+"T..,..R......RR...C........T",
+"T.....R.......RR......,....T",
+"T.....R....,....RR........TT",
+"T..C..R..........RR...C....T",
+"T.....R....HHHH...RR.......T",
+"T....,R....HHHH....RR..,..TT",
+"T.....R.....DD......RR.....T",
+"T.....RRRRRR.........RR....T",
+"T.........,...........RR...T",
+"T..,...................,RR.T",
+"T........................RRT",
+"TTTTTTTTTTTTTTTTTTTTTTTTTTTT"],
+npcs:[
+{id:"jorge2",name:"豪尔赫",x:13,y:11,body:"#7a4a21",hair:"#222222",chain:["day2_road","day2_donde_learn"],ambient:"豪尔赫：No hay apuro.（不着急。）这条路我跑了二十年，它比谁都诚实——你走多远，它就给你多远。"},
+{id:"lucia2",name:"露西娅",x:16,y:12,body:"#4e7041",hair:"#8a5a2b",chain:[],ambient:"Lucía：我也在往北走。一个人走路的时候，脑子里说话的声音会变大，你发现了吗？"}],
+spots:[
+{x:12,y:3,kind:"sign",label:"Ruta 9 路牌",event:"day2_camino_learn"},
+{x:18,y:10,kind:"shop",label:"休息站小卖部",event:"day2_shop"},
+{x:6,y:7,kind:"sparkle",label:"野花丛",event:"R1_wildflower"},
+{x:20,y:4,kind:"view",label:"远处的羊群",lines:[{who:"旁白",text:"草原尽头有一群羊，白花花的，像落在地上的云。风一吹，云不动，草动。"}],effects:{mood:2}}],
+exit:{x1:12,x2:13,y:0}},
+farm:{name:"羊毛农场 Estancia",sleep:"barn",sleepLabel:"农场谷仓",exitHint:"穿过农场，往湖畔小村去",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....,,,,...RR...,....TTTTTT",
+"T.HHHHHH....RR......,......T",
+"T.HHHHHH....RR...FFFFFFFF..T",
+"T..DD.......RR...F......F..T",
+"T...........RR...F..羊...F..T",
+"T....,......RR...F......F..T",
+"T.HHHH......RR...FFFFFFFF..T",
+"T.HHHH....RRRRR......,.....T",
+"T..DD.........R...HHHHHH...T",
+"T......C......R...HHHHHH.T..",
+"T..,..........R.....DD.....T",
+"T.....HHHH....R......,.....T",
+"T.....HHHH....R...C........T",
+"T......DD.....R......,.....T",
+"T.............R............T",
+"TTTTTTTTTTTTTRRTTTTTTTTTTTTT"],
+npcs:[
+{id:"elena",name:"埃琳娜",x:6,y:9,body:"#6d4c2f",hair:"#1f1f1f",chain:["day3_farm_work","day3_lo_siento_learn"],ambient:"埃琳娜：农场不养闲人，但也不亏待肯干活的人。谷仓里有干草，睡个好觉。"},
+{id:"pedro3",name:"佩德罗",x:20,y:6,body:"#5d6d7e",hair:"#cfcfcf",chain:["day3_ayuda_learn"],ambient:"佩德罗抿了一口马黛茶：羊知道风什么时候来。它们不说，但它们先动。"}],
+spots:[
+{x:12,y:10,kind:"sparkle",label:"土路上的钱包",event:"day3_dinero_learn",chainNext:"H2_road_wallet"},
+{x:24,y:12,kind:"dog",label:"牧羊犬",lines:[{who:"旁白",text:"牧羊犬绕着你闻了两圈，尾巴摇成了风车。它认定你不是坏人。"},{who:"你",text:"（被一条狗认可，心情居然真的变好了。）"}],effects:{mood:3}},
+{x:8,y:14,kind:"view",label:"水井",lines:[{who:"旁白",text:"井水凉得扎手。你灌满水壶，又洗了把脸。三天没正经洗脸了。"}],effects:{mood:2}},
+{x:21,y:4,kind:"view",label:"羊圈",lines:[{who:"旁白",text:"几百只羊挤在一起取暖，咩咩声此起彼伏。它们的冬天比你的长，但它们从不抱怨路远。"}],effects:{}}],
+exit:{x1:12,x2:13,y:0}},
+lake:{name:"湖畔小村",sleep:"home",sleepLabel:"村民家",exitHint:"翻过前面的风口隘口",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....,,,,...RR...,....TTTTTT",
+"T.HHHH......RR......HHHH...T",
+"T.HHHH..,...RR......HHHH.T..",
+"T..DD.......RR.......DD....T",
+"T...........RR............TT",
+"T.HHHHHH....RR....,........T",
+"T.HHHHHH....RR.............T",
+"T..DD.......RR....HHHHHH...T",
+"T...........RR....HHHHHH.T..",
+"T....,......RR......DD.....T",
+"T...........RR.............T",
+"T..,....BBBBRRBBBB....,....T",
+"T.WWWWWWWBBBRRBBBWWWWWWWW..T",
+"T.WWWWWWWWWWWWWWWWWWWWWW...T",
+"T..WWWWWWWWWWWWWWWWWWW.....T",
+"TTTTTTTTTTTTTTTTTTTTTTTTTTTT"],
+npcs:[
+{id:"arturo",name:"阿图罗",x:6,y:8,body:"#71584a",hair:"#e8e8e8",chain:["day4_rain_night","day4_frio_learn"],ambient:"阿图罗（大声）：En mis tiempos…（在我那个年代……）年轻人，雨夜最适合听故事，也最适合想家。"}],
+spots:[
+{x:8,y:8,kind:"shelf",label:"阿图罗的家门",event:"day4_casa_learn"},
+{x:4,y:12,kind:"fish",label:"湖边钓鱼点",lines:[{who:"旁白",text:"你用借来的鱼竿坐了二十分钟。鱼没上钩，但雨点落在湖面上的样子，你看入了神。"},{who:"旁白",text:"（临走时钓到一条小鱼，够加个菜。食物 +1）"}],effects:{food:1,mood:2}},
+{x:22,y:12,kind:"view",label:"小码头",lines:[{who:"旁白",text:"码头上停着两条旧船，船身刷着褪色的名字。湖的对岸什么也看不见，只有雨幕。"}],effects:{mood:2}},
+{x:16,y:5,kind:"sparkle",label:"苹果树",event:"R5_apple_tree"}],
+exit:{x1:12,x2:13,y:0}},
+pass:{name:"风口隘口",sleep:"shelter",sleepLabel:"山间庇护所",exitHint:"下到隘口另一侧",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....C......RR......C......T",
+"T..,........RR....,........T",
+"T......C....RR.........C..TT",
+"T...........RR..C..........T",
+"T..C........RR.............T",
+"T...........RR....HHHH.....T",
+"T....,......RR....HHHH..C..T",
+"T...........RR.....DD......T",
+"T..C.....RRRRR.............T",
+"T...........R......C.......T",
+"T..,........R...,..........T",
+"T.....C.....R.........C....T",
+"T...........R....,.........T",
+"T..C........R..............T",
+"T...........R..........C..TT",
+"TTTTTTTTTTTRRTTTTTTTTTTTTTTT"],
+npcs:[
+{id:"pedro5",name:"佩德罗",x:8,y:11,body:"#5d6d7e",hair:"#cfcfcf",chain:["day5_wind"],ambient:"佩德罗：风不讲理，但风讲规矩。顺着它，省力；顶着它，它收双倍的账。"},
+{id:"jorge5",name:"豪尔赫",x:17,y:9,body:"#7a4a21",hair:"#222222",chain:["day5_despacio_learn"],ambient:"豪尔赫拍拍车门：我的车慢，但风吹不着。要不要搭一段，你自己定——走路的人，规矩也是自己定。"}],
+spots:[
+{x:12,y:5,kind:"sign",label:"危险路牌",event:"day5_peligro_learn"},
+{x:19,y:8,kind:"truck",label:"豪尔赫的卡车",event:"H3_hitchhike"},
+{x:5,y:3,kind:"pray",label:"风口的经幡",lines:[{who:"旁白",text:"不知道谁在这里系了一串经幡，风把每一片布都吹得猎猎作响。你在心里许了个愿，没说出口。"},{who:"你",text:"（愿望说出来就不灵了。走吧。）"}],effects:{mood:2}},
+{x:24,y:13,kind:"view",label:"风蚀岩",lines:[{who:"旁白",text:"岩石被风刻出了一道道波纹，像凝固的海浪。一百年后，它会变成沙；你的脚步也是。"}],effects:{mood:2}}],
+exit:{x1:12,x2:13,y:0}},
+camp6:{name:"纳塔莱斯港郊外",sleep:"camp",sleepLabel:"路边营地",exitHint:"最后一段路，进城到码头",
+map:[
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT",
+"T....,,,,...RR...,....TTTTTT",
+"T..,........RR......,......T",
+"T...........RR.........TTTTT",
+"T....,......RR....,........T",
+"T...........RR.............T",
+"T..,........RR......C......T",
+"T...........RR.............T",
+"T....HHHH...RR....,........T",
+"T....HHHH...RR.............T",
+"T.....DD....RR......,......T",
+"T...........RR.............T",
+"T..,........RR.............T",
+"T...........RR....,........T",
+"T....,......RR.............T",
+"T...........RR..........,..T",
+"TTTTTTTTTTTTRRTTTTTTTTTTTTTT"],
+npcs:[
+{id:"lucia6",name:"露西娅",x:10,y:12,body:"#4e7041",hair:"#8a5a2b",chain:["day6_night_talk","day6_manana_learn","day6_hasta_luego_learn"],ambient:"露西娅拨了拨篝火：明天你就到纳塔莱斯了。说真的，我有点羡慕你——你的'家'还有个方向。"}],
+spots:[
+{x:20,y:5,kind:"view",label:"远眺点",lines:[{who:"旁白",text:"翻过这道缓坡，纳塔莱斯港的灯火就在下面了，小小的一片，暖黄色。七天前，那里还只是地图上的一个名字。"},{who:"你",text:"（原来'快到了'是这种感觉。）"}],effects:{mood:5}},
+{x:6,y:14,kind:"sparkle",label:"营地夜空",event:"R6_stars"}],
+exit:{x1:12,x2:13,y:0}},
+port:{name:"纳塔莱斯港",sleep:"none",sleepLabel:"",exitHint:"",
+map:[
+"TTTTTTTTTTTTTTTTTTTTTTTTTTTT",
+"T....,....SSSSSS......,....T",
+"T.HHHH....SSSSSS....HHHH...T",
+"T.HHHH....SSSSSS....HHHH.T..",
+"T..DD......SSSS.......DD...T",
+"T..........SSSS............T",
+"T.HHHHHH...SSSS....,.......T",
+"T.HHHHHH...SSSS............T",
+"T..DD......SSSS....HHHHHH..T",
+"T..........SSSS....HHHHHH.TT",
+"T....,.....SSSS......DD....T",
+"T..........SSSS............T",
+"T..,.......SSSS....,.......T",
+"TTTTTTTTTTTSSSSBBTTTTTTTTTTT",
+"T.WWWWWWWWWWWWWWWWWWWWWWW..T",
+"T.WWWWWWWWWWWWWWWWWWWWWWW..T",
+"TTTTTTTTTTTTTTTTTTTTTTTTTTTT"],
+npcs:[
+{id:"carlos",name:"卡洛斯",x:13,y:11,body:"#33626e",hair:"#3a3a3a",chain:["day7_farewell"],ambient:"卡洛斯：Última Esperanza，最后希望湾。每一个从这里出发的人，都觉得自己是最后一个；每一个回来的人，都成了别人的希望。"}],
+spots:[
+{x:15,y:13,kind:"dock",label:"码头尽头",event:"day7_buen_viaje_learn"},
+{x:6,y:12,kind:"shop",label:"鱼市",lines:[{who:"旁白",text:"鱼市刚开市，帝王蟹堆成小山。鱼贩朝你喊了一串西语，你居然听懂了大半——他在夸今天的蟹好。"}],effects:{mood:2}},
+{x:24,y:5,kind:"view",label:"湾边的灯塔",lines:[{who:"旁白",text:"灯塔的光转了一圈又一圈。它不为谁停留，但每个在海上的人都知道它在。"}],effects:{mood:2}}],
+exit:null}
+};
+const DAY_SCENE={1:"town",2:"road",3:"farm",4:"lake",5:"pass",6:"camp6",7:"port"};
+const REQUIRED={1:["day1_bakery","H1_share_bread"],2:["day2_road"],3:["day3_farm_work","H2_road_wallet"],4:["day4_rain_night"],5:["day5_wind","H3_hitchhike"],6:["day6_night_talk","H5_last_bread"],7:["day7_farewell"]};
+const REQUIRED_LABEL={"day1_bakery":"去面包店见玛尔塔","H1_share_bread":"广场上，索菲娅还在等你","day2_road":"到休息站找豪尔赫问路","day3_farm_work":"去农场帮埃琳娜干活","H2_road_wallet":"农场土路上有什么在等你","day4_rain_night":"去湖畔小村投宿，见阿图罗","day5_wind":"在隘口听佩德罗说风","H3_hitchhike":"豪尔赫的卡车停在路边","day6_night_talk":"和露西娅在营地夜话","H5_last_bread":"先在营地歇下来，吃点东西","day7_farewell":"去码头见渔夫卡洛斯"};
+const WEEK={1:{w:"wind",label:"🌬 有风",pain:1,note:"风从海峡上来，午后可能有阵雨。出门前，老托马斯教过你：先摸膝盖。"},
+2:{w:"rain",label:"🌧 中雨",pain:2,note:"昨晚托马斯说的话应验了大半——今天真的下雨。膝盖比天气预报准。"},
+3:{w:"sun",label:"☀ 晴",pain:0,note:"膝盖安安静静。巴塔哥尼亚难得的好天气，适合赶路。"},
+4:{w:"rain",label:"🌧 中雨",pain:2,note:"膝盖疼得比昨天厉害。湖边的村子在雨里若隐若现，今晚得找个屋檐。"},
+5:{w:"wind",label:"🌬 强风",pain:0,note:"膝盖不疼，但风口隘口的风会偷走力气。今天走路，耗的体力是平时的 1.5 倍。"},
+6:{w:"sun",label:"☀ 晴",pain:0,note:"膝盖不疼，天也晴。最后一整天路，心里反而有点不舍。"},
+7:{w:"sun",label:"☀ 晴",pain:0,note:"膝盖安静，心里也安静。今天，走进纳塔莱斯港。"}};
+const PAIN_TEXT=["不疼——是个好天气的兆头。","隐隐发酸——今天多半有风或阵雨。","明显地疼——今天大概率有雨，走路多耗体力。","疼得发胀——暴雨将至，能不出门就别出门。"];
+const SLEEP_RESTORE={hostel:45,barn:35,home:40,camp:35,shelter:35,none:0};
+const MEMORY_TEXT={sofia_helped:"索菲娅记住了你分的面包",wallet_returned:"农场的人记住了你的诚实",wallet_kept:"钱包的事，你自己记住了",wallet_apologized:"埃琳娜记住了你回头道歉的样子",took_ride:"豪尔赫记得你搭过他的车",jorge_shield:"豪尔赫记得你让他慢开为你挡风",blanket_given:"阿图罗记住了那条让给他的毯子",blanket_shared:"阿图罗记住了你们分过的半条毯子",bread_shared:"露西娅记住了你分的最后一块面包",bread_amigo:"露西娅记住了你说的那句 Amigo"};
+
+
+/* ================= 游戏状态 ================= */
+const cv=$("game"),ctx=cv.getContext("2d");
+let game=null;
+function newGame(){return{day:1,scene:"town",mode:"title",
+res:{stamina:100,food:8,money:15000,mood:70},
+words:[],memories:{},done:{},flags:{},walkPx:0,dayWalkPx:0,cookedDay:0,quizDone:false,chapterDone:false,
+weather:WEEK[1]};}
+const player={x:12*TILE,y:13*TILE,dir:"down",moving:false,frame:0,ft:0};
+let npcsHere=[],spotsHere=[],rainDrops=[],dlgQueue=null,currentEvent=null,exitHintAt=0;
+for(let i=0;i<110;i++)rainDrops.push({x:Math.random()*VIEW_W,y:Math.random()*VIEW_H,s:9+Math.random()*7});
+function ev(id){return DS_EVENTS[id];}
+function isDone(id){return!!game.done[id];}
+function hasWord(w){return game.words.includes(w);}
+function hasMem(m){return!!game.memories[m];}
+/* ================= 资源与提示 ================= */
+const RESNAME={stamina:"体力",food:"食物",money:"比索",mood:"心情"};
+function applyEffects(eff){if(!eff)return[];const msgs=[];
+for(const k in eff){const d=eff[k];if(!d)continue;
+if(k==="stamina")game.res.stamina=clamp(game.res.stamina+d,0,100);
+else if(k==="food")game.res.food=clamp(game.res.food+d,0,10);
+else if(k==="money")game.res.money=Math.max(0,game.res.money+d);
+else if(k==="mood")game.res.mood=clamp(game.res.mood+d,0,100);
+msgs.push(RESNAME[k]+(d>0?"+":"")+d);}updateHUD();return msgs;}
+let toastTimer=null;
+function toast(t,ms){const el=$("toast");el.textContent=t;el.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display="none",ms||2600);}
+function updateHUD(){if(!game)return;
+$("hudDay").textContent="第 "+game.day+" 天 · "+["","上午","午后","黄昏"][clamp(game.flags.phase||1,1,3)];
+$("hudPlace").textContent=SCENES[game.scene].name;
+$("hudWeather").textContent=game.weather.label;
+const p=game.weather.pain,kc=$("kneeChip");
+kc.textContent="🦵 膝盖："+["不疼","隐隐作痛","明显疼痛","剧痛"][p];
+kc.style.background=["rgba(38,32,20,.85)","rgba(146,110,30,.9)","rgba(160,84,26,.92)","rgba(150,40,30,.95)"][p];
+kc.style.transform=p>=2?"rotate(-1.5deg)":"none";
+$("barSta").style.width=game.res.stamina+"%";
+$("hudSta").textContent=game.res.stamina;$("hudFood").textContent=game.res.food;
+$("hudMoney").textContent=game.res.money;$("hudMood").textContent=game.res.mood;}
+/* ================= 对话系统 ================= */
+const dlgEl=$("dialog"),dlgName=$("dlgName"),dlgText=$("dlgText"),choiceEl=$("choices");
+let typeTimer=null,typeFull="",typeShown=0,dlgAdvance=null;
+function typewrite(text){typeFull=text;typeShown=0;dlgText.textContent="";clearInterval(typeTimer);
+typeTimer=setInterval(()=>{typeShown+=2;dlgText.textContent=typeFull.slice(0,typeShown);if(typeShown>=typeFull.length)clearInterval(typeTimer);},16);}
+function lineVisible(){return dlgEl.style.display==="block";}
+function showLine(who,text){dlgEl.style.display="block";dlgName.textContent=who||"";dlgName.style.display=who?"block":"none";typewrite(text);}
+function hideDialog(){dlgEl.style.display="none";choiceEl.style.display="none";clearInterval(typeTimer);}
+function condPass(text){if(typeof text!=="string")return{text,pass:true};
+const closeIdx=text.indexOf("】");
+if(text.startsWith("【成就：")){const ids=["sofia_helped","wallet_returned","wallet_apologized","blanket_given","blanket_shared","bread_shared","bread_amigo","jorge_shield"];
+const listed=ids.filter(id=>text.slice(0,closeIdx).includes(id));const needM=text.match(/至少\s*(\d+)/);const need=needM?+needM[1]:1;
+const cnt=listed.filter(id=>hasMem(id)).length;return{text:text.slice(closeIdx+1),pass:cnt>=need};}
+if(text.startsWith("【cond:")||text.startsWith("【分支：")){const inner=text.slice(0,closeIdx);let pass=false;
+if(inner.includes("无上述")){pass=!hasMem("blanket_given")&&!hasMem("blanket_shared");}
+else{for(const part of inner.split("或")){const mm=part.match(/memory=(\w+)/);if(mm&&hasMem(mm[1]))pass=true;}}
+return{text:text.slice(closeIdx+1),pass};}
+return{text,pass:true};}
+function playLines(lines,i,onDone){const L=lines.filter(l=>condPass(l.text).pass).map(l=>({who:l.who,text:condPass(l.text).text}));
+if(i>=L.length){onDone&&onDone();return;}
+showLine(L[i].who,L[i].text);
+dlgAdvance=()=>{if(typeShown<typeFull.length){typeShown=typeFull.length;dlgText.textContent=typeFull;clearInterval(typeTimer);return;}
+playLines(L,i+1,onDone);};}
+function showChoices(choices,onPick){choiceEl.innerHTML="";choiceEl.style.display="flex";
+choices.forEach(c=>{const b=document.createElement("button");const locked=c.needWord&&!hasWord(c.needWord);
+b.textContent=locked?"？？？（你听不懂——先去学这个词）":c.text;b.disabled=!!locked;
+b.onclick=()=>{choiceEl.style.display="none";onPick(c);};choiceEl.appendChild(b);});}
+function learnWords(list){const fresh=list.filter(w=>!hasWord(w));fresh.forEach(w=>game.words.push(w));
+if(fresh.length){const names=fresh.map(w=>WORDS[w].es+"（"+WORDS[w].zh+"）").join("、");toast("📖 学会新词："+names,3400);applyEffects({mood:2*fresh.length});}
+return fresh;}
+/* ================= 事件引擎 ================= */
+function runEvent(id,onDone){const e=ev(id);if(!e||isDone(id)){onDone&&onDone();return;}
+game.mode="dialog";currentEvent=id;
+const finish=()=>{game.done[id]=true;currentEvent=null;
+let lw=e.learnWord?([].concat(e.learnWord)):[];learnWords(lw);updatePhase();
+if(e.next&&ev(e.next)&&!isDone(e.next)&&ev(e.next).trigger.type!=="talk"){runEvent(e.next,onDone);}
+else{game.mode="walk";onDone&&onDone();}};
+playLines(e.lines||[],0,()=>{
+if(e.choices&&e.choices.length){showChoices(e.choices,c=>{
+const msgs=applyEffects(c.effects);if(c.memory)game.memories[c.memory]=true;
+const tail=[];if(c.reply)tail.push({who:"",text:c.reply});
+if(msgs.length)tail.push({who:"",text:"（"+msgs.join(" · ")+"）"});
+if(tail.length)playLines(tail,0,finish);else finish();});}
+else finish();});}
+function updatePhase(){const req=REQUIRED[game.day]||[];const doneN=req.filter(isDone).length;
+game.flags.phase=req.length&&doneN>=req.length?3:(doneN>0?2:1);updateHUD();}
+/* ================= 场景加载 ================= */
+function loadScene(key){game.scene=key;const sc=SCENES[key];
+npcsHere=sc.npcs.map(n=>({...n,px:n.x*TILE,py:n.y*TILE}));
+spotsHere=sc.spots.map(s=>({...s}));
+const spawns={town:[12,13],road:[5,14],farm:[13,13],lake:[11,10],pass:[11,13],camp6:[11,13],port:[13,12]};
+const sp=spawns[key]||[15,15];player.x=sp[0]*TILE;player.y=sp[1]*TILE;player.dir="down";game.dayWalkPx=0;updateHUD();}
+function tileAt(tx,ty){const sc=SCENES[game.scene];if(ty<0||ty>=sc.map.length||tx<0||tx>=sc.map[0].length)return "T";return sc.map[ty][tx];}
+function solidAt(px,py){const tx=Math.floor(px/TILE),ty=Math.floor(py/TILE);return SOLID.has(tileAt(tx,ty));}
+function collide(nx,ny){const m=7;return solidAt(nx-m,ny+6)||solidAt(nx+m,ny+6)||solidAt(nx-m,ny+15)||solidAt(nx+m,ny+15)||npcsHere.some(n=>Math.abs(n.px+16-(nx+16))<22&&Math.abs(n.py+16-(ny+16))<22);}
+/* ================= 渲染 ================= */
+const TILECOLOR={".":"#7cab58",",":"#74a352","R":"#c29b68","S":"#9aa3a8","P":"#b3a693","W":"#4a7aa5","T":"#4e7041","H":"#d8c49a","D":"#7a5230","F":"#8a6d3b","C":"#8d8d94","B":"#a9834f","G":"#bfae8d"};
+function hash(x,y){let h=(x*374761393+y*668265263)^(x*y*1274126177);return((h>>13)&7)/7;}
+function drawTile(c,x,y,t,tick){const px=x*TILE,py=y*TILE;ctx.fillStyle=c;ctx.fillRect(px,py,TILE,TILE);
+if(c==="."||c===","){ctx.fillStyle="rgba(60,90,40,.35)";const h=hash(x,y);if(h>.45)ctx.fillRect(px+6+h*14,py+8+h*10,2,5);if(h>.75)ctx.fillRect(px+20,py+20,2,4);}
+if(c==="R"||c==="G"){ctx.fillStyle="rgba(120,90,55,.3)";ctx.fillRect(px+4+hash(x,y)*8,py+14,10,2);}
+if(c==="W"){ctx.fillStyle="rgba(255,255,255,.25)";const off=(tick/28+x+y)%2<1?4:10;ctx.fillRect(px+off,py+10,12,2);ctx.fillRect(px+20-off,py+22,10,2);}
+if(c==="T"){ctx.fillStyle="#6d4c2f";ctx.fillRect(px+13,py+18,6,12);ctx.fillStyle="#3d5c33";ctx.fillRect(px+2,py+0,28,20);ctx.fillStyle="#4e7041";ctx.fillRect(px+6,py+3,20,14);}
+if(c==="H"){ctx.fillStyle="#b85c4f";ctx.fillRect(px,py,32,7);ctx.fillStyle="#e6d3a3";ctx.fillRect(px,py+7,32,25);ctx.fillStyle="#5a96b8";if(hash(x,y)>.4)ctx.fillRect(px+10,py+14,10,10);ctx.strokeStyle="rgba(90,60,30,.4)";ctx.strokeRect(px+.5,py+.5,31,31);}
+if(c==="D"){ctx.fillStyle="#e6d3a3";ctx.fillRect(px,py,32,32);ctx.fillStyle="#6d4c2f";ctx.fillRect(px+7,py+6,18,26);ctx.fillStyle="#f6d47c";ctx.fillRect(px+21,py+18,3,3);}
+if(c==="F"){ctx.fillStyle="#7cab58";ctx.fillRect(px,py,32,32);ctx.fillStyle="#8a6d3b";ctx.fillRect(px,py+12,32,5);ctx.fillRect(px+4,py+6,4,20);ctx.fillRect(px+24,py+6,4,20);}
+if(c==="C"){ctx.fillStyle="#7cab58";ctx.fillRect(px,py,32,32);ctx.fillStyle="#8d8d94";ctx.fillRect(px+6,py+10,20,16);ctx.fillStyle="#a5a5ad";ctx.fillRect(px+9,py+7,12,8);}
+if(c==="B"){ctx.fillStyle="#4a7aa5";ctx.fillRect(px,py,32,32);ctx.fillStyle="#a9834f";ctx.fillRect(px,py+3,32,26);ctx.fillStyle="rgba(80,55,25,.5)";ctx.fillRect(px,py+10,32,2);ctx.fillRect(px,py+20,32,2);}
+if(c==="S"||c==="P"){ctx.strokeStyle="rgba(60,60,60,.18)";ctx.strokeRect(px+.5,py+.5,31,31);}}
+function drawChar(x,y,body,hair,isPlayer,dir,frame,name,alert){const bob=isPlayer&&player.moving?Math.sin(frame*10)*1.5:0;
+ctx.save();ctx.translate(x,y+bob);
+if(isPlayer){ctx.fillStyle="#3f5a36";ctx.fillRect(4,-16,24,20);ctx.fillStyle="#567a48";ctx.fillRect(7,-19,18,6);ctx.fillStyle="#c0392b";ctx.fillRect(22,-8,6,10);}
+ctx.fillStyle="#5b4632";ctx.fillRect(9,10,5,10);ctx.fillRect(18,10,5,10);
+ctx.fillStyle=body;ctx.fillRect(7,-4,18,16);
+ctx.fillStyle="#eec39a";ctx.fillRect(8,-14,16,12);
+ctx.fillStyle=hair;ctx.fillRect(8,-15,16,5);
+ctx.fillStyle="#222";const ex=dir==="left"?10:(dir==="right"?18:12);ctx.fillRect(ex,-8,2,2);ctx.fillRect(ex+6,-8,2,2);
+ctx.restore();
+if(name){ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillStyle="rgba(20,16,10,.65)";const w=ctx.measureText(name).width+10;ctx.fillRect(x+16-w/2,y-32,w,15);ctx.fillStyle="#f3e9d2";ctx.fillText(name,x+16,y-21);}
+if(alert){ctx.font="bold 15px sans-serif";ctx.textAlign="center";ctx.fillStyle="#ffd94d";ctx.fillText("!",x+16,y-38);}}
+function npcHasEvent(n){return n.chain.some(id=>!isDone(id)&&gatePass(id));}
+function gatePass(id){
+if(id==="H1_share_bread")return isDone("day1_bakery");
+if(id==="day3_lo_siento_learn")return isDone("H2_road_wallet");
+if(id==="day1_por_favor_learn")return isDone("day1_bakery");
+return true;}
+function render(tick){const sc=SCENES[game.scene];ctx.clearRect(0,0,VIEW_W,VIEW_H);
+for(let y=0;y<sc.map.length;y++)for(let x=0;x<sc.map[0].length;x++)drawTile(TILECOLOR[sc.map[y][x]]||"#888",x,y,sc.map[y][x],tick);
+spotsHere.forEach(s=>{if(s.doneSpot)return;if(s.kind==="sparkle"){ctx.fillStyle=(tick/20)%2<1?"#ffe97a":"#fff3b0";ctx.font="15px sans-serif";ctx.textAlign="center";ctx.fillText("✦",s.x*TILE+16,s.y*TILE+14+Math.sin(tick/16)*2);}});
+const ents=[...npcsHere.map(n=>({y:n.py,k:"n",n})),{y:player.y,k:"p"}].sort((a,b)=>a.y-b.y);
+ents.forEach(e=>{if(e.k==="p")drawChar(player.x,player.y,"#b03a2e","#3a2a1a",true,player.dir,player.frame,"",false);
+else drawChar(e.n.px,e.n.py,e.n.body,e.n.hair,false,"down",0,e.n.name,npcHasEvent(e.n));});
+const wk=game.weather.w;
+if(wk==="rain"){ctx.strokeStyle="rgba(200,220,255,.55)";ctx.lineWidth=1;ctx.beginPath();
+rainDrops.forEach(d=>{ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-3,d.y+d.s);});ctx.stroke();}
+if(game.flags.phase===3){ctx.fillStyle="rgba(217,125,69,.10)";ctx.fillRect(0,0,VIEW_W,VIEW_H);}
+if(game.scene==="port"||game.scene==="town"){ctx.fillStyle="rgba(29,46,68,.05)";ctx.fillRect(0,0,VIEW_W,VIEW_H);}}
+/* ================= 移动与互动 ================= */
+const keys={};let touchDir=null;
+function tryInteract(){
+const fx=player.x+16,fy=player.y+16;
+const dirs={down:[0,26],up:[0,-26],left:[-26,0],right:[26,0]};const d=dirs[player.dir];
+const tx=fx+d[0],ty=fy+d[1];
+const npc=npcsHere.find(n=>Math.abs(n.px+16-tx)<30&&Math.abs(n.py+16-ty)<30);
+if(npc){talkNPC(npc);return;}
+const spot=spotsHere.find(s=>!s.doneSpot&&Math.abs(s.x*TILE+16-tx)<28&&Math.abs(s.y*TILE+16-ty)<28);
+if(spot){fireSpot(spot);return;}}
+function talkNPC(n){
+if(n.id==="marta"&&isDone("day1_bakery")&&isDone("day1_por_favor_learn")){shopDialog();return;}
+const nextId=n.chain.find(id=>!isDone(id));
+if(nextId&&gatePass(nextId)){runEvent(nextId);return;}
+if(nextId&&!gatePass(nextId)){playLines([{who:n.name,text:n.id==="sofia"?"（先去妈妈店里把面包买了吧，她在等你呢。）":"（先把手头的事做完，再来找我。）"}],0,()=>{game.mode="walk";hideDialog();});game.mode="dialog";return;}
+playLines([{who:n.name,text:n.ambient||"……"}],0,()=>{game.mode="walk";hideDialog();});game.mode="dialog";}
+function shopDialog(){game.mode="dialog";
+playLines([{who:"玛尔塔",text:"面包 300 比索一个，刚出炉的。要几个？"}],0,()=>{
+showChoices([{text:"买一个面包（-300 比索，食物+1）"},{text:"不买了"}],c=>{
+if(c.text.startsWith("买")){if(game.res.money>=300&&game.res.food<10){applyEffects({money:-300,food:1});playLines([{who:"玛尔塔",text:"拿好。路上饿了就吃，别省——省不出个家来。"}],0,()=>{game.mode="walk";hideDialog();});}
+else playLines([{who:"玛尔塔",text:game.res.money<300?"钱不够啦，孩子。去农场帮工能挣钱。":"背包都满啦，装不下了。"}],0,()=>{game.mode="walk";hideDialog();});}
+else{game.mode="walk";hideDialog();}});});}
+function fireSpot(s){if(s.event){game.mode="dialog";runEvent(s.event,()=>{if(s.chainNext&&!isDone(s.chainNext))runEvent(s.chainNext);});s.doneSpot=true;return;}
+if(s.lines){game.mode="dialog";playLines(s.lines,0,()=>{applyEffects(s.effects);game.mode="walk";hideDialog();});s.doneSpot=true;}}
+function checkStepTriggers(){
+const sc=SCENES[game.scene],tx=Math.floor((player.x+16)/TILE),ty=Math.floor((player.y+16)/TILE);
+const sp=spotsHere.find(s=>!s.doneSpot&&s.kind==="sparkle"&&s.x===tx&&s.y===ty);
+if(sp){fireSpot(sp);return;}
+if(game.day===2&&!isDone("day2_forecast_proved")&&game.dayWalkPx>750){runEvent("day2_forecast_proved");return;}
+if(sc.exit&&ty<=sc.exit.y&&tx>=sc.exit.x1&&tx<=sc.exit.x2){onExit();}}
+function onExit(){const now=Date.now();
+if(game.day===7){if(isDone("day7_ending"))return;
+if(isDone("day7_farewell")&&isDone("day7_buen_viaje_learn")){runEvent("day7_ending",showSettlement);}
+else if(now-exitHintAt>2500){exitHintAt=now;toast("先去码头见卡洛斯，再走到码头尽头听听他最后的话。");player.y+=TILE;}
+return;}
+const missing=(REQUIRED[game.day]||[]).filter(id=>!isDone(id));
+if(missing.length){if(now-exitHintAt>2500){exitHintAt=now;game.mode="dialog";
+playLines([{who:"旁白",text:"还没到走的时候——"+missing.map(id=>REQUIRED_LABEL[id]).join("；")+"。"}],0,()=>{game.mode="walk";hideDialog();});}
+player.y+=TILE;return;}
+openCamp(true);}
+function update(dt){let dx=0,dy=0;
+if(keys["arrowup"]||keys["w"]||touchDir==="up")dy=-1;else if(keys["arrowdown"]||keys["s"]||touchDir==="down")dy=1;
+else if(keys["arrowleft"]||keys["a"]||touchDir==="left")dx=-1;else if(keys["arrowright"]||keys["d"]||touchDir==="right")dx=1;
+player.moving=!!(dx||dy);
+if(player.moving){player.dir=dy<0?"up":dy>0?"down":dx<0?"left":"right";player.ft+=dt;if(player.ft>.16){player.ft=0;player.frame++;}
+const wk=game.weather.w;let speed=132;let drain=1/230;
+if(wk==="rain"){speed*=.85;drain*=1.5;} if(game.day===5&&wk==="wind"){speed*=.8;drain*=1.5;} if(game.day===1&&wk==="wind"){drain*=1.15;}
+const mx=dx*speed*dt,my=dy*speed*dt;
+if(mx&&!collide(player.x+mx,player.y))player.x+=mx;
+if(my&&!collide(player.x,player.y+my))player.y+=my;
+player.x=clamp(player.x,0,VIEW_W-32);player.y=clamp(player.y,0,VIEW_H-32);
+const dist=Math.abs(mx)+Math.abs(my);game.walkPx+=dist;game.dayWalkPx+=dist;
+game.flags.drainAcc=(game.flags.drainAcc||0)+dist*drain;
+if(game.flags.drainAcc>=1){const d=Math.floor(game.flags.drainAcc);game.flags.drainAcc-=d;game.res.stamina=clamp(game.res.stamina-d,0,100);updateHUD();
+if(game.res.stamina<=0){game.res.stamina=30;game.res.mood=clamp(game.res.mood-3,0,100);game.mode="dialog";
+playLines([{who:"旁白",text:"你眼前一黑，扶着路牌坐了下来。膝盖在抗议，肚子也在抗议。"},{who:"你",text:"（不能再这么走了。吃点东西，慢一点。）体力恢复到 30，心情 -3。"}],0,()=>{game.mode="walk";hideDialog();updateHUD();});}}
+checkStepTriggers();}
+if(game.weather.w==="rain")rainDrops.forEach(d=>{d.y+=d.s*2.2;d.x-=2;if(d.y>VIEW_H){d.y=-10;d.x=Math.random()*VIEW_W;}});}
+/* ================= 面板：词库 / 扎营 / 结算 ================= */
+const panel=$("panel"),panelBox=$("panelBox");
+function showPanel(html){panelBox.innerHTML=html;panel.style.display="flex";game.mode="panel";}
+function hidePanel(){panel.style.display="none";if(game.mode==="panel")game.mode="walk";}
+function openWords(){const learned=Object.keys(WORDS).map(id=>({id,...WORDS[id],got:hasWord(id)}));
+showPanel("<h2>📖 我的西语词库（"+game.words.length+" / 24）</h2><p>每学会一个词，就多一条活下去的路。</p><div class='wordgrid'>"+
+learned.map(w=>"<div class='w"+(w.got?"":" lock")+"'>"+(w.got?"<b>"+w.es+"</b> · "+w.zh:"？？？ · 还没学会")+"</div>").join("")+
+"</div><div class='row'><button onclick='hidePanel()'>合上词库</button></div>");}
+function openCamp(arrival){if(game.day===6&&isDone("day6_night_talk")&&!isDone("H5_last_bread")){runEvent("H5_last_bread",()=>openCamp(arrival));return;}
+const sc=SCENES[game.scene];
+const canQuiz=game.day>=6&&game.words.length>=6&&!game.quizDone;
+showPanel("<h2>⛺ "+(arrival?"到达"+sc.sleepLabel:sc.name+" · 休整")+"</h2>"+
+"<p>第 "+game.day+" 天。体力 "+game.res.stamina+" · 食物 "+game.res.food+" · 比索 "+game.res.money+" · 心情 "+game.res.mood+"</p>"+
+"<p>"+(arrival?"今天的路走完了。篝火/床铺都准备好了，睡一觉，明天继续向北。":"停下来歇一会儿。吃点热的，看看词库，或者直接睡。")+"</p>"+
+"<div class='row'>"+
+"<button id='cCook' "+(game.cookedDay===game.day||game.res.food<=0?"disabled":"")+">🍳 做饭加餐（食物-1，体力+10）</button>"+
+(canQuiz?"<button id='cQuiz'>📝 词库小测（6 题）</button>":"")+
+"<button id='cWords'>📖 看词库</button>"+
+(game.day<7?"<button id='cSleep'>😴 睡觉 → 第 "+(game.day+1)+" 天</button>":"")+
+"<button class='ghost' onclick='hidePanel()'>继续走</button></div>"+
+(game.day===6&&!isDone("day6_night_talk")?"<p style='color:#f6d47c'>露西娅在篝火边等你——先去和她说说话，再睡也不迟。</p>":""));
+const cq=$("cCook");if(cq)cq.onclick=()=>{game.cookedDay=game.day;applyEffects({food:-1,stamina:10,mood:2});toast("🍲 吃了顿热的。体力+10，心情+2");openCamp(arrival);};
+const qz=$("cQuiz");if(qz)qz.onclick=()=>{hidePanel();startQuiz();};
+const wd=$("cWords");if(wd)wd.onclick=()=>openWords();
+const sl=$("cSleep");if(sl)sl.onclick=()=>{hidePanel();doSleep();};}
+function startQuiz(){const pool=[...game.words].sort(()=>Math.random()-.5).slice(0,6);let i=0,score=0;game.mode="dialog";
+const ask=()=>{if(i>=pool.length){game.quizDone=true;playLines([{who:"露西娅",text:"小测结束：答对 "+score+" / "+pool.length+"。不错——半年前你连 Hola 都不会说呢。"}],0,()=>{game.mode="walk";hideDialog();saveGame(true);});return;}
+const id=pool[i],w=WORDS[id];const others=Object.keys(WORDS).filter(k=>k!==id).sort(()=>Math.random()-.5).slice(0,3);
+const opts=[w.zh,...others.map(k=>WORDS[k].zh)].sort(()=>Math.random()-.5);
+playLines([{who:"露西娅",text:"第 "+(i+1)+" 题：「"+w.es+"」是什么意思？"}],0,()=>{
+showChoices(opts.map(o=>({text:o})),c=>{const right=c.text===w.zh;if(right){score++;applyEffects({mood:2});}
+playLines([{who:"露西娅",text:right?"对！就是「"+w.zh+"」。":"不对哦——「"+w.es+"」是「"+w.zh+"」。没关系，错过一次记得更牢。"}],0,()=>{i++;ask();});});});};
+ask();}
+function doSleep(){const sc=SCENES[game.scene];
+if(game.day===4&&game.scene==="lake"&&!isDone("H4_blanket")){runEvent("H4_blanket",()=>runEvent("day4_knee_pain_night",()=>doSleep()));return;}
+let restore=SLEEP_RESTORE[sc.sleep]||35;let note=[];
+if(game.res.food>0){game.res.food-=1;note.push("晚餐吃掉 1 份食物");}else{restore=Math.floor(restore/2);game.res.mood=clamp(game.res.mood-5,0,100);note.push("没东西吃，饿着肚子睡，恢复减半，心情 -5");}
+if(game.day===4&&hasMem("blanket_given")){restore-=10;note.push("毯子让给了阿图罗，这一夜有点冷");}
+game.res.stamina=clamp(game.res.stamina+restore,0,100);
+game.day+=1;game.weather=WEEK[game.day];loadScene(DAY_SCENE[game.day]);updatePhase();
+saveGame(true);startDay(note.join("；")+"。体力恢复 +"+restore+"。");}
+function startDay(extraNote){updateHUD();
+if(game.day>1){if(game.res.food>0){game.res.food-=1;}else{game.res.mood=clamp(game.res.mood-5,0,100);toast("🍞 没有早餐，心情 -5",3000);}updateHUD();}
+const morning=()=>{const wk=game.weather;game.mode="dialog";
+playLines([{who:"旁白",text:"第 "+game.day+" 天清晨。你醒来，先摸了摸膝盖。"},
+{who:"旁白",text:"膝盖："+PAIN_TEXT[wk.pain]},
+{who:"旁白",text:wk.note+(extraNote?"\n（昨夜："+extraNote+"）":"")}],0,()=>{game.mode="walk";hideDialog();});};
+if(game.day===1){runEvent("day1_wake_forecast",()=>runEvent("day1_flashback",morning));}
+else morning();}
+function showSettlement(){game.mode="end";game.chapterDone=true;saveGame(true);
+const moralIds=["H1_share_bread","H2_road_wallet","H3_hitchhike","H4_blanket","H5_last_bread"];
+const moralDone=moralIds.filter(isDone).length;
+const mems=Object.keys(game.memories).filter(m=>MEMORY_TEXT[m]).map(m=>"· "+MEMORY_TEXT[m]);
+const ach=[];if(!hasMem("took_ride"))ach.push("🚶 全程徒步——一步一步走完了这一章");
+if(hasMem("wallet_returned")||hasMem("wallet_apologized"))ach.push("🤝 诚实旅人");if(hasMem("sofia_helped"))ach.push("🍞 索菲娅的朋友");
+showPanel("<h2>第一章 · 完 —— 纳塔莱斯港</h2>"+
+"<p>七天，六段路，一条 Ruta 9。你从世界尽头走到了最后希望湾。</p>"+
+"<p>📖 学会西语词：<b>"+game.words.length+" / 24</b>　·　💛 完成人性事件：<b>"+moralDone+" / 5</b></p>"+
+"<p><b>被谁记住了：</b></p><p>"+(mems.length?mems.join("<br>"):"这一路，你谁也没惊动。")+"</p>"+
+(ach.length?"<p><b>成就：</b><br>"+ach.join("<br>")+"</p>":"")+
+"<p style='color:#f6d47c'>卡洛斯说：没有直达英国的船——先去布宜诺斯艾利斯，再转船。下周有一班货船。</p>"+
+"<p style='font-size:1.15em;color:#fdf6e0'>“Casa no es un lugar. Es el camino de vuelta.”<br>家不是一个地方，是回去的路。</p>"+
+"<div class='row'><button onclick='hidePanel();game.mode=\"walk\"'>在码头再走走</button><button class='ghost' onclick='location.reload()'>回到标题</button></div>");}
+/* ================= 存档 ================= */
+const SAVE_KEY="zjhj_ch1_save_v1";
+function saveGame(silent){if(!game)return;const data={day:game.day,res:game.res,words:game.words,memories:game.memories,done:game.done,flags:{phase:game.flags.phase},cookedDay:game.cookedDay,quizDone:game.quizDone,chapterDone:game.chapterDone};
+try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));if(!silent)toast("💾 已存档");}catch(e){if(!silent)toast("存档失败：浏览器不允许");}}
+function loadGame(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;const d=JSON.parse(raw);
+game=newGame();game.day=d.day;game.res=d.res;game.words=d.words||[];game.memories=d.memories||{};game.done=d.done||{};
+game.cookedDay=d.cookedDay||0;game.quizDone=!!d.quizDone;game.chapterDone=!!d.chapterDone;game.weather=WEEK[game.day];
+loadScene(DAY_SCENE[game.day]);game.flags.phase=(d.flags&&d.flags.phase)||1;updatePhase();return true;}catch(e){return false;}}
+/* ================= 输入 ================= */
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;
+if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
+if((k===" "||k==="enter")&&game){if(lineVisible()&&dlgAdvance&&choiceEl.style.display!=="flex"){dlgAdvance();}
+else if(game.mode==="walk")tryInteract();}});
+window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+cv.addEventListener("pointerdown",()=>{if(lineVisible()&&dlgAdvance&&choiceEl.style.display!=="flex")dlgAdvance();});
+$("dialog").addEventListener("pointerdown",()=>{if(dlgAdvance&&choiceEl.style.display!=="flex")dlgAdvance();});
+document.querySelectorAll("#touch [data-dir]").forEach(b=>{const d=b.dataset.dir;
+b.addEventListener("pointerdown",e=>{e.preventDefault();touchDir=d;});
+b.addEventListener("pointerup",()=>{if(touchDir===d)touchDir=null;});
+b.addEventListener("pointerleave",()=>{if(touchDir===d)touchDir=null;});});
+$("btnA").addEventListener("click",()=>{if(lineVisible()&&dlgAdvance&&choiceEl.style.display!=="flex")dlgAdvance();else if(game&&game.mode==="walk")tryInteract();});
+$("btnB").addEventListener("click",()=>{if(game&&(game.mode==="walk"))openWords();});
+$("btnWords").addEventListener("click",()=>{if(game&&game.mode==="walk")openWords();});
+$("btnCamp").addEventListener("click",()=>{if(game&&game.mode==="walk")openCamp(false);});
+$("btnSave").addEventListener("click",()=>saveGame(false));
+$("btnNew").addEventListener("click",()=>{try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+game=newGame();$("title").style.display="none";$("hud").style.display="flex";loadScene("town");updatePhase();startDay("");});
+$("btnContinue").addEventListener("click",()=>{if(loadGame()){$("title").style.display="none";$("hud").style.display="flex";toast("📖 读档成功：第 "+game.day+" 天");}
+else toast("还没有存档");});
+if(!localStorage.getItem(SAVE_KEY))$("btnContinue").style.opacity=".5";
+/* ================= 主循环 ================= */
+let lastT=0;
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(.05,(t-lastT)/1000||0);lastT=t;
+if(game&&game.mode!=="title"){if(game.mode==="walk")update(dt);render(t/16.7);}}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
