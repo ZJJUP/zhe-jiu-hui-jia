@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#263c38">
+<title>这就回家 - 第一章：智利篇</title>
+
+<style>
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+:root { --bg:#263c38; --panel:#354e46; --panel-light:#486459; --cream:#f3e8ce; --text:#f5edda; --muted:#b9c4ae; --green:#8eae78; --red:#d87968; --yellow:#e5bd71; }
+body { background:var(--bg); color:var(--text); font-family:"Courier New",monospace; overflow:hidden; width:100%; height:100dvh; user-select:none; touch-action:none; }
+#game { width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; max-width:1200px; margin:auto; background:#263c38; }
+#topbar { flex-shrink:0; padding:9px 12px; background:#354e46; border-bottom:3px solid #1e302b; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+#game-title { font-size:15px; font-weight:bold; color:#f3e8ce; }
+#chapter-info { font-size:10px; color:#b9c4ae; margin-top:4px; }
+#top-actions { display:flex; gap:6px; }
+.ui-button { background:#587366; border:2px solid #78917c; color:white; border-radius:5px; padding:7px 9px; font-size:11px; cursor:pointer; font-family:inherit; }
+.ui-button:active { transform:translateY(2px); }
+#hud { flex-shrink:0; padding:8px 10px; background:#293e37; display:grid; grid-template-columns:repeat(4,1fr); gap:7px; border-bottom:2px solid #1e302b; }
+.resource { min-width:0; background:#40594d; border:1px solid #657f6b; border-radius:5px; padding:5px; }
+.resource-header { display:flex; justify-content:space-between; font-size:10px; margin-bottom:5px; color:#eee5d0; }
+.resource-value { font-size:11px; font-weight:bold; }
+.bar-bg { width:100%; height:6px; background:#26382f; border-radius:4px; overflow:hidden; }
+.bar-fill { height:100%; width:100%; transition:width .2s; border-radius:4px; }
+#stamina-bar { background:#a7c783; } #food-bar { background:#e4bb72; } #money-bar { background:#e4d08c; } #mood-bar { background:#d58f9a; }
+#world-container { flex:1; min-height:0; position:relative; overflow:hidden; background:#8aa27c; display:flex; align-items:center; justify-content:center; }
+#gameCanvas { display:block; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges; touch-action:none; }
+#location-label { position:absolute; top:12px; left:12px; background:rgba(35,53,45,.85); border:1px solid #8da58a; border-radius:5px; padding:7px 10px; color:#fff0d7; font-size:11px; pointer-events:none; }
+#position-label { position:absolute; bottom:8px; left:10px; color:white; font-size:10px; text-shadow:1px 1px #26382f; pointer-events:none; }
+#bottom-panel { flex-shrink:0; min-height:120px; padding:8px 12px; background:#354e46; border-top:3px solid #1e302b; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+#control-hint { font-size:10px; color:#c3d0bd; line-height:1.7; max-width:45%; }
+#dpad { display:grid; grid-template-columns:repeat(3,42px); grid-template-rows:repeat(3,36px); gap:3px; flex-shrink:0; }
+.dpad-btn { background:#617b68; border:2px solid #91a38a; border-radius:7px; color:#fff3db; font-size:18px; display:flex; justify-content:center; align-items:center; touch-action:none; }
+.dpad-btn:active,.dpad-btn.active { background:#8ca77b; border-color:#e5d7b3; }
+#up { grid-column:2; grid-row:1; } #left { grid-column:1; grid-row:2; } #center { grid-column:2; grid-row:2; } #right { grid-column:3; grid-row:2; } #down { grid-column:2; grid-row:3; }
+#center { background:#40594d; border-color:#617968; font-size:11px; }
+@media(max-width:500px) { #game-title{font-size:13px;} .resource-header{font-size:9px;} #bottom-panel{min-height:115px;} #control-hint{font-size:9px;} #dpad{grid-template-columns:repeat(3,39px);grid-template-rows:repeat(3,34px);} }
+@media(min-width:800px) { #bottom-panel{min-height:105px;} }
+#overlay { display:none; position:absolute; inset:0; z-index:20; background:rgba(20,32,27,.75); align-items:center; justify-content:center; padding:18px; }
+#overlay.visible { display:flex; }
+#dialog-box { width:100%; max-width:480px; max-height:85%; overflow-y:auto; background:#f1e5ca; color:#394b3c; border:4px solid #8a9a77; border-radius:7px; padding:18px; }
+#dialog-title { font-size:16px; font-weight:bold; margin-bottom:12px; }
+#dialog-content { font-size:13px; line-height:1.9; white-space:pre-wrap; }
+#dialog-options { display:flex; flex-direction:column; gap:8px; margin-top:15px; }
+.dialog-option { background:#637d61; color:white; border:2px solid #8da17c; border-radius:4px; padding:10px; font-size:12px; font-family:inherit; text-align:left; cursor:pointer; }
+canvas,button { -webkit-user-select:none; user-select:none; }
+</style>
+</head>
+<body>
+<div id="game">
+<header id="topbar">
+<div><div id="game-title">这就回家</div><div id="chapter-info">CHAPTER 01 · 智利篇 · DAY 1</div></div>
+<div id="top-actions"><button class="ui-button" id="save-btn">保存</button><button class="ui-button" id="load-btn">读取</button></div>
+</header>
+<section id="hud">
+<div class="resource"><div class="resource-header"><span>⚡ 体力</span><span class="resource-value" id="stamina-value">85</span></div><div class="bar-bg"><div class="bar-fill" id="stamina-bar"></div></div></div>
+<div class="resource"><div class="resource-header"><span>🍞 食物</span><span class="resource-value" id="food-value">75</span></div><div class="bar-bg"><div class="bar-fill" id="food-bar"></div></div></div>
+<div class="resource"><div class="resource-header"><span>💰 金钱</span><span class="resource-value" id="money-value">60</span></div><div class="bar-bg"><div class="bar-fill" id="money-bar"></div></div></div>
+<div class="resource"><div class="resource-header"><span>♡ 心情</span><span class="resource-value" id="mood-value">70</span></div><div class="bar-bg"><div class="bar-fill" id="mood-bar"></div></div></div>
+</section>
+<main id="world-container">
+<canvas id="gameCanvas"></canvas>
+<div id="location-label">Puerto Natales · 智利</div>
+<div id="position-label">X: 0 · Y: 0</div>
+<div id="overlay"><div id="dialog-box"><div id="dialog-title"></div><div id="dialog-content"></div><div id="dialog-options"></div></div></div>
+</main>
+<footer id="bottom-panel">
+<div id="control-hint"><strong>移动控制</strong><br>桌面：WASD / 方向键<br>手机：触摸方向键<br><br><span id="movement-status">准备出发...</span></div>
+<div id="dpad">
+<button class="dpad-btn" id="up" aria-label="向上">▲</button>
+<button class="dpad-btn" id="left" aria-label="向左">◀</button>
+<button class="dpad-btn" id="center" aria-label="停止">●</button>
+<button class="dpad-btn" id="right" aria-label="向右">▶</button>
+<button class="dpad-btn" id="down" aria-label="向下">▼</button>
+</div>
+</footer>
+</div>
+<script>
+
+/* =========================================
+   PART 1
+   游戏基础框架
+========================================= */
+
+const CONFIG = {
+    canvasWidth:640, canvasHeight:400,
+    tileSize:32, mapWidth:40, mapHeight:30,
+    playerSpeed:125,
+    saveKey:"the_way_home_chapter1_save",
+    autoSaveInterval:10000,
+    colors:{
+        grass:"#829d72", grass2:"#8ba77a", road:"#b7a17c",
+        roadDark:"#9c886c", water:"#729a9c", mountain:"#788b80",
+        tree:"#496b4c", treeDark:"#38543e", flower:"#e9d5a2"
+    }
+};
+
+const game = {
+    running:true, paused:false, lastTime:0, deltaTime:0, elapsed:0,
+    day:1, chapter:1, location:"Puerto Natales",
+    resources:{stamina:85,food:75,money:60,mood:70},
+    player:{
+        x:12*CONFIG.tileSize,y:14*CONFIG.tileSize,
+        width:20,height:25,speed:CONFIG.playerSpeed,
+        direction:"down",moving:false,frame:0,frameTimer:0
+    },
+    camera:{x:0,y:0},
+    progress:{
+        distance:0,explored:[],learnedWords:[],
+        completedEvents:[],npcMemory:{},eventFlags:{}
+    },
+    weather:{today:"sunny",tomorrow:"cloudy",painLevel:0},
+    input:{up:false,down:false,left:false,right:false}
+};
+
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d",{alpha:false});
+canvas.width=CONFIG.canvasWidth;
+canvas.height=CONFIG.canvasHeight;
+ctx.imageSmoothingEnabled=false;
+
+const TILE={
+    GRASS:0,GRASS2:1,ROAD:2,ROAD_DARK:3,WATER:4,
+    TREE:5,MOUNTAIN:6,FLOWER:7,FENCE:8,SAND:9
+};
+
+let worldMap=[];
+
+function generateMap(){
+    worldMap=[];
+    for(let y=0;y<CONFIG.mapHeight;y++){
+        const row=[];
+        for(let x=0;x<CONFIG.mapWidth;x++){
+            let tile=TILE.GRASS;
+            if((x*7+y*13)%11<4) tile=TILE.GRASS2;
+            if(y>=11&&y<=17&&x>=5&&x<=20){
+                if(y===14||x===12) tile=TILE.ROAD;
+            }
+            if((x>=7&&x<=10&&y>=9&&y<=11)||(x>=15&&x<=18&&y>=17&&y<=19)){
+                if(x===8||x===17||y===10||y===18) tile=TILE.ROAD;
+            }
+            if(x>=19&&y>=13&&y<=15) tile=TILE.ROAD;
+            if(x>=19&&(y===12||y===16)) tile=TILE.GRASS2;
+            if(x<5&&y>5&&y<23) tile=TILE.WATER;
+            if(y<5) tile=TILE.MOUNTAIN;
+            if((x*19+y*23)%37===0&&tile!==TILE.ROAD&&tile!==TILE.WATER&&x>4) tile=TILE.TREE;
+            if((x*13+y*17)%41===0&&tile===TILE.GRASS) tile=TILE.FLOWER;
+            row.push(tile);
+        }
+        worldMap.push(row);
+    }
+    for(let x=6;x<11;x++) worldMap[8][x]=TILE.FENCE;
+    for(let y=13;y<=15;y++) for(let x=11;x<=13;x++) worldMap[y][x]=TILE.ROAD;
+}
+
+function drawTile(tile,screenX,screenY,x,y){
+    const size=CONFIG.tileSize,colors=CONFIG.colors;
+    switch(tile){
+        case TILE.GRASS:
+            ctx.fillStyle=colors.grass;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#718e64";
+            if((x+y)%3===0) ctx.fillRect(screenX+8,screenY+9,2,4);
+            break;
+        case TILE.GRASS2:
+            ctx.fillStyle=colors.grass2;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#78966c";ctx.fillRect(screenX+5,screenY+17,3,2);
+            break;
+        case TILE.ROAD:
+            ctx.fillStyle=colors.road;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#c4ae88";
+            ctx.fillRect(screenX+6,screenY+8,3,2);
+            ctx.fillRect(screenX+22,screenY+24,4,2);
+            break;
+        case TILE.ROAD_DARK:
+            ctx.fillStyle=colors.roadDark;ctx.fillRect(screenX,screenY,size,size);break;
+        case TILE.WATER:
+            ctx.fillStyle=colors.water;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#8eb3b0";
+            ctx.fillRect(screenX+5,screenY+9,10,2);
+            ctx.fillRect(screenX+18,screenY+23,8,2);break;
+        case TILE.MOUNTAIN:
+            ctx.fillStyle="#87978a";ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#aab4a1";ctx.fillRect(screenX+7,screenY+6,13,8);
+            ctx.fillStyle="#65796f";ctx.fillRect(screenX+15,screenY+14,12,10);break;
+        case TILE.TREE:
+            ctx.fillStyle=colors.grass;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle=colors.treeDark;ctx.fillRect(screenX+6,screenY+5,21,20);
+            ctx.fillStyle=colors.tree;ctx.fillRect(screenX+9,screenY+3,16,17);
+            ctx.fillStyle="#79956b";ctx.fillRect(screenX+12,screenY+6,5,5);
+            ctx.fillStyle="#775c43";ctx.fillRect(screenX+15,screenY+23,5,8);break;
+        case TILE.FLOWER:
+            ctx.fillStyle=colors.grass;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle=colors.flower;
+            ctx.fillRect(screenX+12,screenY+13,4,4);
+            ctx.fillRect(screenX+18,screenY+19,3,3);break;
+        case TILE.FENCE:
+            ctx.fillStyle=colors.grass;ctx.fillRect(screenX,screenY,size,size);
+            ctx.fillStyle="#80674c";
+            ctx.fillRect(screenX+3,screenY+10,27,4);
+            ctx.fillRect(screenX+3,screenY+22,27,4);
+            ctx.fillRect(screenX+5,screenY+5,4,26);
+            ctx.fillRect(screenX+23,screenY+5,4,26);break;
+        case TILE.SAND:
+            ctx.fillStyle="#c5ae82";ctx.fillRect(screenX,screenY,size,size);break;
+        default:
+            ctx.fillStyle=colors.grass;ctx.fillRect(screenX,screenY,size,size);
+    }
+}
+
+function getTileAtPixel(x,y){
+    const tileX=Math.floor(x/CONFIG.tileSize),tileY=Math.floor(y/CONFIG.tileSize);
+    if(tileX<0||tileY<0||tileX>=CONFIG.mapWidth||tileY>=CONFIG.mapHeight) return null;
+    return worldMap[tileY][tileX];
+}
+
+function isBlocked(x,y){
+    const points=[[x+3,y+4],[x+17,y+4],[x+3,y+23],[x+17,y+23]];
+    for(const point of points){
+        const tile=getTileAtPixel(point[0],point[1]);
+        if(tile===null||tile===TILE.WATER||tile===TILE.TREE||tile===TILE.MOUNTAIN||tile===TILE.FENCE) return true;
+    }
+    return false;
+}
+
+function drawPlayer(){
+    const p=game.player;
+    const sx=Math.round(p.x-game.camera.x),sy=Math.round(p.y-game.camera.y);
+    let bounce=0;
+    if(p.moving) bounce=Math.sin(p.frame*8)*2;
+    const y=sy+bounce;
+    ctx.fillStyle="rgba(30,45,32,0.28)";ctx.fillRect(sx+3,sy+22,18,5);
+    ctx.fillStyle="#8a6448";ctx.fillRect(sx+3,y+8,15,13);
+    ctx.fillStyle="#537d75";ctx.fillRect(sx+4,y+10,12,10);
+    ctx.fillStyle="#e6bd91";ctx.fillRect(sx+5,y+1,11,10);
+    ctx.fillStyle="#463c32";ctx.fillRect(sx+5,y,11,4);
+    ctx.fillStyle="#382f29";
+    if(p.direction==="down"){ctx.fillRect(sx+7,y+6,2,2);ctx.fillRect(sx+13,y+6,2,2);}
+    if(p.direction==="left") ctx.fillRect(sx+5,y+6,2,2);
+    if(p.direction==="right") ctx.fillRect(sx+15,y+6,2,2);
+    ctx.fillStyle="#344b4a";
+    if(p.moving&&Math.sin(p.frame*8)>0){
+        ctx.fillRect(sx+5,y+20,5,5);ctx.fillRect(sx+13,y+21,5,4);
+    }else{
+        ctx.fillRect(sx+5,y+20,5,5);ctx.fillRect(sx+12,y+20,5,5);
+    }
+}
+
+function updateCamera(){
+    const p=game.player;
+    game.camera.x=p.x+p.width/2-CONFIG.canvasWidth/2;
+    game.camera.y=p.y+p.height/2-CONFIG.canvasHeight/2;
+    const maxX=CONFIG.mapWidth*CONFIG.tileSize-CONFIG.canvasWidth;
+    const maxY=CONFIG.mapHeight*CONFIG.tileSize-CONFIG.canvasHeight;
+    game.camera.x=Math.max(0,Math.min(maxX,game.camera.x));
+    game.camera.y=Math.max(0,Math.min(maxY,game.camera.y));
+}
+
+function renderWorld(){
+    ctx.fillStyle="#829d72";ctx.fillRect(0,0,CONFIG.canvasWidth,CONFIG.canvasHeight);
+    const size=CONFIG.tileSize;
+    const startX=Math.max(0,Math.floor(game.camera.x/size));
+    const startY=Math.max(0,Math.floor(game.camera.y/size));
+    const endX=Math.min(CONFIG.mapWidth,Math.ceil((game.camera.x+CONFIG.canvasWidth)/size)+1);
+    const endY=Math.min(CONFIG.mapHeight,Math.ceil((game.camera.y+CONFIG.canvasHeight)/size)+1);
+    for(let y=startY;y<endY;y++){
+        for(let x=startX;x<endX;x++){
+            drawTile(worldMap[y][x],Math.round(x*size-game.camera.x),Math.round(y*size-game.camera.y),x,y);
+        }
+    }
+    drawPlayer();
+}
+
+const keyMap={KeyW:"up",ArrowUp:"up",KeyS:"down",ArrowDown:"down",KeyA:"left",ArrowLeft:"left",KeyD:"right",ArrowRight:"right"};
+document.addEventListener("keydown",event=>{
+    const direction=keyMap[event.code];
+    if(direction){event.preventDefault();game.input[direction]=true;}
+});
+document.addEventListener("keyup",event=>{
+    const direction=keyMap[event.code];
+    if(direction) game.input[direction]=false;
+});
+window.addEventListener("blur",()=>clearInput());
+
+function clearInput(){
+    for(const key in game.input) game.input[key]=false;
+    document.querySelectorAll(".dpad-btn").forEach(btn=>btn.classList.remove("active"));
+}
+
+const dpadButtons={up:document.getElementById("up"),down:document.getElementById("down"),left:document.getElementById("left"),right:document.getElementById("right")};
+function bindTouchButton(direction,button){
+    button.addEventListener("pointerdown",event=>{
+        event.preventDefault();game.input[direction]=true;button.classList.add("active");button.setPointerCapture(event.pointerId);
+    });
+    function release(event){event.preventDefault();game.input[direction]=false;button.classList.remove("active");}
+    button.addEventListener("pointerup",release);
+    button.addEventListener("pointercancel",release);
+    button.addEventListener("lostpointercapture",()=>{
+        game.input[direction]=false;button.classList.remove("active");
+    });
+}
+for(const direction in dpadButtons) bindTouchButton(direction,dpadButtons[direction]);
+document.getElementById("center").addEventListener("pointerdown",event=>{event.preventDefault();clearInput();});
+
+function updatePlayer(dt){
+    const p=game.player;
+    let dx=0,dy=0;
+    if(game.input.left) dx-=1;
+    if(game.input.right) dx+=1;
+    if(game.input.up) dy-=1;
+    if(game.input.down) dy+=1;
+    const length=Math.sqrt(dx*dx+dy*dy);
+    p.moving=length>0;
+    if(!p.moving) return;
+    dx/=length;dy/=length;
+    if(Math.abs(dx)>Math.abs(dy)) p.direction=dx>0?"right":"left";
+    else p.direction=dy>0?"down":"up";
+    let speed=p.speed;
+    if(game.resources.stamina<20) speed*=.75;
+    const moveX=dx*speed*dt,moveY=dy*speed*dt;
+    const oldX=p.x,oldY=p.y;
+    if(!isBlocked(p.x+moveX,p.y)) p.x+=moveX;
+    if(!isBlocked(p.x,p.y+moveY)) p.y+=moveY;
+    const moved=Math.hypot(p.x-oldX,p.y-oldY);
+    if(moved>0) game.progress.distance+=moved/1000;
+    p.frameTimer+=dt;
+    if(p.frameTimer>=.16){p.frame++;p.frameTimer=0;}
+}
+
+function clamp(value,min=0,max=100){return Math.max(min,Math.min(max,value));}
+
+function updateHUD(){
+    const resources=game.resources;
+    const fields=[
+        {key:"stamina",value:"stamina-value",bar:"stamina-bar"},
+        {key:"food",value:"food-value",bar:"food-bar"},
+        {key:"money",value:"money-value",bar:"money-bar"},
+        {key:"mood",value:"mood-value",bar:"mood-bar"}
+    ];
+    fields.forEach(field=>{
+        const value=clamp(resources[field.key]);
+        document.getElementById(field.value).textContent=Math.round(value);
+        document.getElementById(field.bar).style.width=value+"%";
+    });
+    document.getElementById("chapter-info").textContent=`CHAPTER 01 · 智利篇 · DAY ${game.day}`;
+    document.getElementById("position-label").textContent=`X: ${Math.floor(game.player.x/32)} · Y: ${Math.floor(game.player.y/32)}`;
+}
+
+function getSaveData(){
+    return {
+        version:1,savedAt:new Date().toISOString(),day:game.day,chapter:game.chapter,location:game.location,
+        resources:{...game.resources},
+        player:{x:game.player.x,y:game.player.y,direction:game.player.direction},
+        progress:{
+            distance:game.progress.distance,explored:[...game.progress.explored],
+            learnedWords:[...game.progress.learnedWords],completedEvents:[...game.progress.completedEvents],
+            npcMemory:structuredClone(game.progress.npcMemory),eventFlags:structuredClone(game.progress.eventFlags)
+        },
+        weather:{...game.weather}
+    };
+}
+
+function saveGame(){
+    try{
+        localStorage.setItem(CONFIG.saveKey,JSON.stringify(getSaveData()));
+        showStatus("游戏已保存");return true;
+    }catch(error){console.error("保存失败：",error);showStatus("保存失败，请检查浏览器存储权限");return false;}
+}
+
+function loadGame(){
+    try{
+        const raw=localStorage.getItem(CONFIG.saveKey);
+        if(!raw){showStatus("没有找到存档");return false;}
+        const data=JSON.parse(raw);
+        if(!data||data.version!==1||!data.player||!data.resources){showStatus("存档格式不正确");return false;}
+        game.day=data.day||1;game.chapter=data.chapter||1;game.location=data.location||"Puerto Natales";
+        Object.assign(game.resources,data.resources);
+        game.player.x=data.player.x;game.player.y=data.player.y;game.player.direction=data.player.direction||"down";
+        if(data.progress){
+            game.progress.distance=data.progress.distance||0;
+            game.progress.explored=data.progress.explored||[];
+            game.progress.learnedWords=data.progress.learnedWords||[];
+            game.progress.completedEvents=data.progress.completedEvents||[];
+            game.progress.npcMemory=data.progress.npcMemory||{};
+            game.progress.eventFlags=data.progress.eventFlags||{};
+        }
+        if(data.weather) Object.assign(game.weather,data.weather);
+        if(isBlocked(game.player.x,game.player.y)){game.player.x=12*CONFIG.tileSize;game.player.y=14*CONFIG.tileSize;}
+        clearInput();updateCamera();updateHUD();showStatus("存档读取成功");return true;
+    }catch(error){console.error("读取存档失败：",error);showStatus("存档读取失败");return false;}
+}
+
+function autoSave(){saveGame();}
+function showStatus(message){document.getElementById("movement-status").textContent=message;}
+document.getElementById("save-btn").addEventListener("click",saveGame);
+document.getElementById("load-btn").addEventListener("click",loadGame);
+
+const EventSystem={trigger(eventId){},checkConditions(){},complete(eventId){}};
+const DialogueSystem={start(dialogueId){},show(text){},choose(optionId){},close(){}};
+const WordSystem={
+    learn(wordId){},
+    test(){},
+    isLearned(wordId){return game.progress.learnedWords.includes(wordId);}
+};
+const WeatherSystem={forecast(){},update(){},getTomorrowWeather(){return game.weather.tomorrow;}};
+const CampSystem={open(){},cook(){},sleep(){}};
+
+/* =========================================
+   PART 1 END
+   PART 2 begins below
+========================================= */
+
+
+/* =========================================
+   PART 2
+   事件、对话、词库、天气、扎营及游戏启动
+========================================= */
+
+const WORD_DATA = [
+{id:"hola",spanish:"Hola",chinese:"你好",category:"greeting",example:"Hola, ¿cómo estás?",day:1},
+{id:"gracias",spanish:"Gracias",chinese:"谢谢",category:"greeting",example:"Muchas gracias.",day:1},
+{id:"si",spanish:"Sí",chinese:"是",category:"basic",example:"Sí, por favor.",day:1},
+{id:"no",spanish:"No",chinese:"不",category:"basic",example:"No, gracias.",day:1},
+{id:"agua",spanish:"Agua",chinese:"水",category:"food",example:"Necesito agua.",day:2},
+{id:"pan",spanish:"Pan",chinese:"面包",category:"food",example:"Quiero pan.",day:1},
+{id:"por_favor",spanish:"Por favor",chinese:"请",category:"greeting",example:"Agua, por favor.",day:2},
+{id:"cuanto",spanish:"¿Cuánto cuesta?",chinese:"多少钱？",category:"shopping",example:"¿Cuánto cuesta el pan?",day:2},
+{id:"no_entiendo",spanish:"No entiendo",chinese:"我不明白",category:"communication",example:"Lo siento, no entiendo.",day:2},
+{id:"donde",spanish:"¿Dónde está...?",chinese:"……在哪里？",category:"direction",example:"¿Dónde está el camino?",day:2},
+{id:"izquierda",spanish:"Izquierda",chinese:"左边",category:"direction",example:"A la izquierda.",day:3},
+{id:"derecha",spanish:"Derecha",chinese:"右边",category:"direction",example:"A la derecha.",day:3},
+{id:"recto",spanish:"Recto",chinese:"直走",category:"direction",example:"Sigue recto.",day:3},
+{id:"ayuda",spanish:"Ayuda",chinese:"帮助",category:"emergency",example:"¡Necesito ayuda!",day:3},
+{id:"cansado",spanish:"Estoy cansado",chinese:"我累了（男性）",category:"feeling",example:"Estoy muy cansado.",day:3},
+{id:"hambre",spanish:"Tengo hambre",chinese:"我饿了",category:"feeling",example:"Tengo mucha hambre.",day:4},
+{id:"lejos",spanish:"¿Está lejos?",chinese:"远吗？",category:"direction",example:"¿Está lejos el pueblo?",day:4},
+{id:"lluvia",spanish:"Lluvia",chinese:"雨",category:"weather",example:"Mañana habrá lluvia.",day:4},
+{id:"frio",spanish:"Frío",chinese:"冷",category:"weather",example:"Hace mucho frío.",day:5},
+{id:"amigo",spanish:"Amigo",chinese:"朋友",category:"greeting",example:"Hola, amigo.",day:5},
+{id:"cuidado",spanish:"Cuidado",chinese:"小心",category:"warning",example:"¡Cuidado!",day:5},
+{id:"bien",spanish:"Está bien",chinese:"没关系 / 好的",category:"communication",example:"Está bien, gracias.",day:6},
+{id:"descansar",spanish:"Necesito descansar",chinese:"我需要休息",category:"feeling",example:"Necesito descansar un poco.",day:6},
+{id:"hasta_luego",spanish:"Hasta luego",chinese:"再见",category:"greeting",example:"¡Hasta luego!",day:7}
+];
+
+const NPC_DATA=[
+{id:"elena",name:"Elena",role:"面包店老板娘",x:14,y:14,color:"#bd8870",dialogue:"elena_intro"},
+{id:"little_girl",name:"小女孩",role:"当地居民",x:17,y:14,color:"#d69c78",dialogue:"girl_bread"},
+{id:"mateo",name:"Mateo",role:"旅馆老板",x:10,y:11,color:"#748e9b",dialogue:"mateo_intro"},
+{id:"sofia",name:"Sofía",role:"当地学生",x:19,y:10,color:"#b987a3",dialogue:"sofia_intro"}
+];
+
+const INTERACTABLES=[
+{id:"bakery",name:"面包店",x:14,y:14,type:"npc",npcId:"elena"},
+{id:"girl",name:"小女孩",x:17,y:14,type:"npc",npcId:"little_girl"},
+{id:"inn",name:"旅馆",x:10,y:11,type:"npc",npcId:"mateo"},
+{id:"sofia",name:"Sofía",x:19,y:10,type:"npc",npcId:"sofia"},
+{id:"bench",name:"海湾长椅",x:6,y:15,type:"rest"},
+{id:"view",name:"海湾观景点",x:5,y:19,type:"scenery"}
+];
+
+const EVENT_DATA={
+morning_forecast:{
+title:"陌生的早晨",day:1,
+text:"你从旅馆的床上醒来。\n窗外传来海风吹过屋檐的声音。\n你下意识地摸了摸自己的膝盖。\n它似乎比昨天更酸痛了一些。",
+choices:[
+{text:"仔细感受关节的疼痛",action:()=>{game.weather.painLevel=1;WeatherSystem.forecast();}},
+{text:"暂时不管它，准备出门",action:()=>{game.weather.painLevel=0;WeatherSystem.forecast();}}
+]},
+elena_intro:{
+title:"面包店里的陌生人",
+text:"Elena：¡Hola!\n她微笑着向你打招呼。\n你听不懂她说的话，只能有些尴尬地点点头。",
+words:["hola","gracias","si","no","pan"],
+choices:[
+{text:"尝试说：Hola",action:()=>{WordSystem.learn("hola");DialogueSystem.show("你努力说出了 Hola。\nElena 笑着点头，似乎很高兴你愿意尝试。");}},
+{text:"用手势打招呼",action:()=>{game.resources.mood+=2;DialogueSystem.show("你挥了挥手。\nElena 理解了你的意思。");}}
+]},
+girl_bread:{
+title:"面包与小女孩",
+text:"一个小女孩站在面包店门口。\n她看了看你手中的面包，又摸了摸自己的肚子。\n她似乎已经很久没有吃东西了。",
+choices:[
+{text:"分给她一半面包",action:()=>{
+game.resources.food-=15;game.resources.mood+=8;
+game.progress.npcMemory.little_girl={sharedBread:true,day:game.day};
+game.progress.eventFlags.sharedBread=true;
+DialogueSystem.show("你掰下一半面包递给她。\n小女孩接过面包，露出了笑容。\n她说：¡Gracias！\n你虽然没完全听懂，但大概明白了。");
+WordSystem.learn("gracias");WordSystem.learn("pan");
+}},
+{text:"收起面包，继续自己的旅程",action:()=>{
+game.progress.eventFlags.sharedBread=false;
+DialogueSystem.show("你看了看手中的食物，最终还是收了起来。\n小女孩离开了。");
+}},
+{text:"询问面包店老板娘",action:()=>{
+game.progress.eventFlags.askedElena=true;
+DialogueSystem.show("你指了指小女孩，又看向 Elena。\n她似乎理解了你的意思，拿出了一小块面包。");
+game.resources.money-=3;game.resources.food+=5;WordSystem.learn("gracias");
+}}
+]},
+knee_injury:{
+title:"那场意外",
+text:"你的膝盖突然传来一阵熟悉的酸痛。\n你想起了几天前的意外。\n那次摔倒之后，天气变化似乎总能提前通过关节感觉到。\n你开始怀疑，这种疼痛是否能够成为旅途中的一种预警。",
+choices:[{text:"记住这种感觉",action:()=>{
+game.progress.eventFlags.kneeInjury=true;game.weather.painLevel=1;game.resources.mood+=3;
+DialogueSystem.show("你决定以后每天早晨都检查自己的膝盖。\n也许它能告诉你一些关于明天的事情。");
+}}]
+},
+mateo_intro:{
+title:"旅馆老板 Mateo",
+text:"Mateo：Buenos días。\n他指了指墙上的地图，又指向城镇外面的道路。\n看起来，他想知道你准备去哪里。",
+choices:[
+{text:"展示地图",action:()=>{
+DialogueSystem.show("Mateo 在地图上画了一条通往北方的路线。\n他告诉你，沿着 Ruta 9 前进，就能逐渐接近 Villa Cerro Castillo。");
+game.progress.eventFlags.routeKnown=true;WordSystem.learn("donde");
+}},
+{text:"用手势表达自己想旅行",action:()=>{DialogueSystem.show("Mateo 看着你的背包，笑了笑。\n他似乎明白你是一名旅行者。");}}
+]},
+sofia_intro:{
+title:"Sofía 的好奇心",
+text:"Sofía 是一名当地学生。\n她发现你听不懂西班牙语，于是放慢了语速。\n她对你的母语产生了兴趣。",
+choices:[
+{text:"教她说中文的“你好”",action:()=>{
+game.progress.npcMemory.sofia={taughtChinese:true,day:game.day};game.resources.mood+=5;
+DialogueSystem.show("你教她说：你好。\n她努力模仿着你的发音，随后开心地笑了起来。");
+}},
+{text:"尝试用西语交流",action:()=>{
+WordSystem.learn("hola");DialogueSystem.show("你说出了 Hola。\nSofía 听懂了，并鼓励你继续学习。");
+}}
+]},
+/* 缺失：第 2 部分原始输出在 road_wallet 事件的 action 内中断；以下由第 2A 部分续接。 */
+road_wallet:{
+title:"路边的钱包",
+text:"你在路边发现一个棕色的钱包。\n里面似乎有一些钱，还有一张照片。",
+choices:[{text:"交给附近的牧场工人",action:()=>{
+game.progress.eventFlags.returnedWallet=true;
+/* 缺失：原始消息在此处中断；road_wallet 的后续实现见 index-part2.html。 */
+// =========================================
+// PART 2A
+// 接续 index-part1.html 中 road_wallet 事件
+// =========================================
+
+: true,
+                        day: game.day
+                    };
+
+                    game.resources.mood += 5;
+
+                    DialogueSystem.show(
+                        "你把钱包交给了牧场工人。\n他仔细确认了里面的东西，向你表示感谢。\n也许以后你们还会再见面。"
+                    );
+                }
+            },
+            {
+                text:"拿走里面的钱",
+                action:() => {
+                    game.resources.money += 15;
+                    game.progress.eventFlags.tookWalletMoney = true;
+
+                    DialogueSystem.show(
+                        "你拿走了钱包里的钱，然后把钱包放回路边。\n你获得了一些钱，但心里隐隐有些不安。"
+                    );
+                }
+            },
+            {
+                text:"不做处理，继续赶路",
+                action:() => {
+                    game.progress.eventFlags.ignoredWallet = true;
+
+                    DialogueSystem.show(
+                        "你看了钱包一眼，最终选择继续赶路。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // H03：受伤的旅行者
+    injured_traveler: {
+        title:"路边的旅行者",
+        text:"你发现一名旅行者坐在路边。\n他的脚似乎受了伤，背包也散落在地上。",
+        choices:[
+            {
+                text:"用自己的绷带帮助他",
+                action:() => {
+                    game.resources.stamina -= 5;
+                    game.resources.mood += 8;
+                    game.progress.eventFlags.helpedTraveler = true;
+
+                    DialogueSystem.show(
+                        "你拿出绷带，帮他简单处理了伤口。\n他向你道谢，并告诉你前方有一处可以休息的地方。"
+                    );
+                }
+            },
+            {
+                text:"分享一些食物",
+                action:() => {
+                    game.resources.food -= 10;
+                    game.resources.mood += 6;
+
+                    DialogueSystem.show(
+                        "你递给他一些食物。\n他接过食物，向你点了点头。"
+                    );
+                }
+            },
+            {
+                text:"继续赶路",
+                action:() => {
+                    DialogueSystem.show(
+                        "你看了看自己的物资，最终决定继续赶路。\n他向你挥了挥手。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // H04：损坏的牧场围栏
+    broken_fence: {
+        title:"牧场围栏",
+        text:"一段木制围栏倒在地上。\n几只羊正在靠近公路。\n远处似乎有牧场工人，但他还没有注意到这里。",
+        choices:[
+            {
+                text:"帮忙修复围栏",
+                action:() => {
+                    game.resources.stamina -= 10;
+                    game.progress.eventFlags.fixedFence = true;
+                    game.progress.npcMemory.carlos = {
+                        helpedFence:true,
+                        day:game.day
+                    };
+
+                    DialogueSystem.show(
+                        "你花了一些时间扶起木桩，重新固定围栏。\n牧场工人发现后，向你表示感谢。"
+                    );
+                }
+            },
+            {
+                text:"寻找牧场工人",
+                action:() => {
+                    game.progress.eventFlags.reportedFence = true;
+
+                    DialogueSystem.show(
+                        "你找到附近的牧场工人，向他指出围栏损坏的位置。\n他立即赶了过去。"
+                    );
+                }
+            },
+            {
+                text:"继续前进",
+                action:() => {
+                    game.progress.eventFlags.ignoredFence = true;
+
+                    DialogueSystem.show(
+                        "你没有停留，继续沿着公路前进。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // H05：货车司机的请求
+    truck_driver: {
+        title:"路边的货车",
+        text:"一辆货车停在路边。\n司机 Andrés 正在搬运一个沉重的箱子。\n他看见你后，向你招了招手。",
+        choices:[
+            {
+                text:"帮他搬运箱子",
+                action:() => {
+                    game.resources.stamina -= 8;
+                    game.resources.money += 10;
+                    game.progress.eventFlags.helpedDriver = true;
+
+                    DialogueSystem.show(
+                        "你帮 Andrés 把箱子搬上了货车。\n他给了你一些报酬，还告诉你前方道路的情况。"
+                    );
+                }
+            },
+            {
+                text:"拒绝他的请求",
+                action:() => {
+                    DialogueSystem.show(
+                        "你摇了摇头，指了指自己的背包和膝盖。\nAndrés 理解了你的意思。"
+                    );
+                }
+            },
+            {
+                text:"先问问箱子里是什么",
+                action:() => {
+                    WordSystem.learn("amigo");
+
+                    DialogueSystem.show(
+                        "你指着箱子问了一句：¿Qué es esto?\nAndrés 笑了起来，向你解释箱子里装的是工具。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // H06：最后一份食物
+    last_meal: {
+        title:"最后一份食物",
+        text:"避雨棚里坐着一位旅行者。\n你发现自己的背包里只剩下一份食物。\n对方也显得十分疲惫。",
+        choices:[
+            {
+                text:"分享食物",
+                action:() => {
+                    game.resources.food -= 15;
+                    game.resources.mood += 8;
+
+                    game.progress.eventFlags.sharedLastMeal = true;
+
+                    DialogueSystem.show(
+                        "你把食物分给了对方。\n他告诉你，前方不远处就是 Villa Cerro Castillo 的方向入口。"
+                    );
+                }
+            },
+            {
+                text:"留下食物给自己",
+                action:() => {
+                    game.progress.eventFlags.keptLastMeal = true;
+
+                    DialogueSystem.show(
+                        "你决定保留食物。\n你还需要走完最后一段路，对方也理解你的处境。"
+                    );
+                }
+            },
+            {
+                text:"询问能否交换",
+                action:() => {
+                    if (game.resources.money >= 5) {
+                        game.resources.money -= 5;
+                        game.resources.food += 10;
+
+                        DialogueSystem.show(
+                            "你拿出一些钱，对方则分给你一些食物。\n你们完成了一次简单的交换。"
+                        );
+                    } else {
+                        DialogueSystem.show(
+                            "你摸了摸口袋，发现钱已经不够了。\n对方遗憾地摇了摇头。"
+                        );
+                    }
+                }
+            }
+        ]
+    },
+
+    // W02：轻微酸痛
+    mild_pain: {
+        title:"膝盖有些酸",
+        text:"早晨醒来，你感觉膝盖有些酸胀。\n这种感觉并不强烈，但你开始留意窗外的云层。",
+        choices:[
+            {
+                text:"记录身体的感觉",
+                action:() => {
+                    game.weather.painLevel = 1;
+                    WeatherSystem.forecast();
+
+                    DialogueSystem.show(
+                        "你把今天的身体状况记录下来。\n也许明天的天气会有些变化。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // W03：明显疼痛
+    strong_pain: {
+        title:"熟悉的疼痛",
+        text:"今天膝盖明显比昨天疼得厉害。\n你试着活动了一下关节，感觉天气似乎正在发生变化。",
+        choices:[
+            {
+                text:"仔细检查关节",
+                action:() => {
+                    game.weather.painLevel = 2;
+                    WeatherSystem.forecast();
+
+                    DialogueSystem.show(
+                        "你感觉明天降雨的可能性比较高。\n最好提前寻找可以避雨的地方。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // W04：雨天
+    rainy_day: {
+        title:"雨终于来了",
+        text:"清晨，雨滴落在帐篷和草地上。\n你想起昨天膝盖传来的疼痛。\n看来这次身体的预感是正确的。",
+        choices:[
+            {
+                text:"穿好雨具继续前进",
+                action:() => {
+                    game.weather.today = "rain";
+                    WeatherSystem.update();
+
+                    DialogueSystem.show(
+                        "你收拾好背包，准备在雨中继续旅行。\n今天的道路可能会比平时难走。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // W05：疼痛缓解
+    pain_relief: {
+        title:"身体轻松了一些",
+        text:"经过一晚休息，你感觉膝盖没有昨天那么疼了。\n窗外的云层似乎也正在散开。",
+        choices:[
+            {
+                text:"记录变化",
+                action:() => {
+                    game.weather.painLevel = 0;
+                    WeatherSystem.forecast();
+
+                    DialogueSystem.show(
+                        "你把疼痛减轻的情况记了下来。\n也许明天会迎来一个晴朗的日子。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // W06：寒冷与僵硬
+    cold_joint: {
+        title:"寒冷的早晨",
+        text:"清晨的空气格外寒冷。\n你的膝盖有些僵硬，但这种感觉和下雨前的酸痛不太一样。",
+        choices:[
+            {
+                text:"活动关节，注意保暖",
+                action:() => {
+                    game.resources.stamina -= 2;
+                    game.weather.painLevel = Math.max(
+                        0,
+                        game.weather.painLevel
+                    );
+
+                    DialogueSystem.show(
+                        "你慢慢活动关节，穿上外套。\n你提醒自己，不是每一种疼痛都意味着下雨。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // R01：动物脚印
+    animal_tracks: {
+        title:"草地上的脚印",
+        text:"你在草地上发现一串奇怪的脚印。\n它们延伸到远处的灌木丛中。",
+        choices:[
+            {
+                text:"仔细观察",
+                action:() => {
+                    game.resources.mood += 3;
+                    game.progress.explored.push("animal_tracks");
+
+                    DialogueSystem.show(
+                        "你蹲下来观察脚印。\n虽然不知道是什么动物留下的，但这让你对这片土地产生了更多好奇。"
+                    );
+                }
+            },
+            {
+                text:"继续赶路",
+                action:() => {
+                    DialogueSystem.show("你拍了拍裤子，继续前进。");
+                }
+            }
+        ]
+    },
+
+    // R02：旧明信片
+    old_postcard: {
+        title:"一张旧明信片",
+        text:"路边有一张被风吹来的旧明信片。\n上面写着一段旅行者留下的话。",
+        choices:[
+            {
+                text:"读一读明信片",
+                action:() => {
+                    game.resources.mood += 5;
+
+                    DialogueSystem.show(
+                        "明信片上写着：\n“有时候，最重要的不是抵达，而是路上的人。”\n你把它夹进了旅行日志。"
+                    );
+                }
+            },
+            {
+                text:"把它放回原处",
+                action:() => {
+                    DialogueSystem.show(
+                        "你把明信片放回石头旁边，继续前进。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // R03：强风
+    strong_wind: {
+        title:"突然刮起的强风",
+        text:"一阵强风突然从草原方向吹来。\n你的背包被吹得晃动起来。",
+        choices:[
+            {
+                text:"停下来整理背包",
+                action:() => {
+                    game.resources.stamina -= 2;
+
+                    DialogueSystem.show(
+                        "你花了一点时间重新整理背包。\n风渐渐小了一些。"
+                    );
+                }
+            },
+            {
+                text:"顶着风继续走",
+                action:() => {
+                    game.resources.stamina -= 5;
+
+                    DialogueSystem.show(
+                        "你低下头，顶着风继续前进。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // R04：发现硬币
+    lost_coin: {
+        title:"草地里的硬币",
+        text:"你注意到路边的泥土里有一枚硬币。",
+        choices:[
+            {
+                text:"捡起来",
+                action:() => {
+                    game.resources.money += 3;
+
+                    DialogueSystem.show(
+                        "你捡起了硬币，擦掉上面的泥土，放进了口袋。"
+                    );
+                }
+            },
+            {
+                text:"不去理会",
+                action:() => {
+                    DialogueSystem.show("你继续赶路。");
+                }
+            }
+        ]
+    },
+
+    // R05：远处的羊群
+    sheep_herd: {
+        title:"远处的羊群",
+        text:"一群羊正在草地上吃草。\n附近的牧场工人向你挥了挥手。",
+        choices:[
+            {
+                text:"向他挥手回应",
+                action:() => {
+                    game.resources.mood += 3;
+
+                    DialogueSystem.show(
+                        "你向牧场工人挥手。\n虽然语言不同，但你们都露出了笑容。"
+                    );
+                }
+            },
+            {
+                text:"继续观察羊群",
+                action:() => {
+                    game.progress.explored.push("sheep_herd");
+
+                    DialogueSystem.show(
+                        "你停下来欣赏了一会儿羊群，然后继续前进。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // R06：旅行者的音乐
+    traveler_music: {
+        title:"避雨棚里的音乐",
+        text:"避雨棚里传来一段轻柔的吉他声。\n一位旅行者正坐在那里休息。",
+        choices:[
+            {
+                text:"坐下来听一会儿",
+                action:() => {
+                    game.resources.mood += 8;
+
+                    DialogueSystem.show(
+                        "你坐在一旁听音乐。\n有那么一会儿，你忘记了旅途的疲惫。"
+                    );
+                }
+            },
+            {
+                text:"打个招呼后离开",
+                action:() => {
+                    WordSystem.learn("hola");
+
+                    DialogueSystem.show(
+                        "你说了一声 Hola，随后继续上路。"
+                    );
+                }
+            }
+        ]
+    },
+
+    // R07：路边野花
+    wild_flower: {
+        title:"风中的野花",
+        text:"路边开着几朵小花。\n它们在风中轻轻摇晃。",
+        choices:[
+            {
+                text:"记录这片风景",
+                action:() => {
+                    game.resources.mood += 5;
+                    game.progress.explored.push("wild_flower");
+
+                    DialogueSystem.show(
+                        "你拿出旅行日志，记录下今天看到的花。\n这是旅途中值得记住的小事。"
+                    );
+                }
+            },
+            {
+                text:"继续赶路",
+                action:() => {
+                    DialogueSystem.show("你继续沿着道路前进。");
+                }
+            }
+        ]
+    },
+
+    // R08：短暂阵雨
+    sudden_shower: {
+        title:"一场短暂的阵雨",
+        text:"天空突然暗了下来。\n几滴雨落在你的背包上。",
+        choices:[
+            {
+                text:"寻找附近的遮蔽物",
+                action:() => {
+                    game.resources.stamina -= 1;
+
+                    DialogueSystem.show(
+                        "你找到一处可以暂时躲雨的地方。\n雨势很快减弱了。"
+                    );
+                }
+            },
+            {
+                text:"继续行走",
+                action:() => {
+                    game.weather.today = "rain";
+                    DialogueSystem.show(
+                        "你拉紧外套，继续在雨中前进。"
+                    );
+                }
+            }
+        ]
+    }
+};
+
+
+// =========================================
+// 21. 对话系统：完整实现
+// =========================================
+
+let dialogueState={
+    active:false,eventId:null,choices:[],onClose:null
+};
+
+DialogueSystem.show=function(text){
+    dialogueState.active=true;
+    dialogueState.eventId=null;
+    dialogueState.choices=[];
+    dialogueState.onClose=null;
+    document.getElementById("dialog-title").textContent="旅行记录";
+    document.getElementById("dialog-content").textContent=text;
+    const options=document.getElementById("dialog-options");
+    options.innerHTML="";
+    const button=document.createElement("button");
+    button.className="dialog-option";
+    button.textContent="继续";
+    button.addEventListener("click",()=>DialogueSystem.close());
+    options.appendChild(button);
+    document.getElementById("overlay").classList.add("visible");
+    game.paused=true;
+};
+
+DialogueSystem.start=function(dialogueId){
+    const event=EVENT_DATA[dialogueId];
+    if(!event){console.warn("找不到事件：",dialogueId);return false;}
+    if(game.progress.completedEvents.includes(dialogueId)) return false;
+    dialogueState.active=true;
+    dialogueState.eventId=dialogueId;
+    dialogueState.choices=event.choices||[];
+    dialogueState.onClose=null;
+    document.getElementById("dialog-title").textContent=event.title||"旅行事件";
+    document.getElementById("dialog-content").textContent=event.text||"";
+    const options=document.getElementById("dialog-options");
+    options.innerHTML="";
+    dialogueState.choices.forEach((choice,index)=>{
+        const button=document.createElement("button");
+        button.className="dialog-option";
+        button.textContent=choice.text;
+        button.addEventListener("click",()=>DialogueSystem.choose(index));
+        options.appendChild(button);
+    });
+    document.getElementById("overlay").classList.add("visible");
+    game.paused=true;
+    return true;
+};
+
+DialogueSystem.choose=function(index){
+    const choice=dialogueState.choices[index];
+    if(!choice) return;
+    const eventId=dialogueState.eventId;
+    dialogueState.choices=[];
+    document.getElementById("dialog-options").innerHTML="";
+    try{
+        if(typeof choice.action==="function") choice.action();
+    }catch(error){
+        console.error("事件执行错误：",error);
+        DialogueSystem.show("发生了一点意外。\n你决定暂时继续自己的旅程。");
+        return;
+    }
+    if(eventId) game.progress.completedEvents.push(eventId);
+    updateHUD();
+    if(dialogueState.eventId===eventId&&dialogueState.active) DialogueSystem.close();
+};
+
+DialogueSystem.close=function(){
+    dialogueState.active=false;
+    dialogueState.eventId=null;
+    dialogueState.choices=[];
+    document.getElementById("overlay").classList.remove("visible");
+    game.paused=false;
+    clearInput();
+    updateHUD();
+};
+
+EventSystem.trigger=function(eventId){
+    return DialogueSystem.start(eventId);
+};
+
+EventSystem.complete=function(eventId){
+    if(!game.progress.completedEvents.includes(eventId)) game.progress.completedEvents.push(eventId);
+};
+
+EventSystem.checkConditions=function(){
+    if(game.day>=5&&game.progress.eventFlags.ignoredFence&&!game.progress.eventFlags.sheepOnRoad){
+        game.progress.eventFlags.sheepOnRoad=true;
+        return "sheep_herd";
+    }
+    if(game.progress.eventFlags.helpedTraveler&&game.day>=5&&!game.progress.eventFlags.travelerThanked){
+        game.progress.eventFlags.travelerThanked=true;
+        return "traveler_music";
+    }
+    return null;
+};
+
+
+// =========================================
+// PART 2B
+// 词库、天气、扎营、章节流程及游戏启动
+// =========================================
+
+WordSystem.learn=function(wordId){
+    const word=WORD_DATA.find(w=>w.id===wordId);
+    if(!word) return false;
+    if(game.progress.learnedWords.includes(wordId)) return false;
+    game.progress.learnedWords.push(wordId);
+    showStatus("学会新词："+word.spanish);
+    return true;
+};
+
+WordSystem.getLearned=function(){
+    return WORD_DATA.filter(word=>game.progress.learnedWords.includes(word.id));
+};
+
+WordSystem.getTodayWords=function(){
+    return WORD_DATA.filter(word=>word.day===game.day&&!game.progress.learnedWords.includes(word.id));
+};
+
+WordSystem.showVocabulary=function(){
+    const words=WordSystem.getLearned();
+    if(!words.length){
+        DialogueSystem.show("你还没有学会任何西班牙语词汇。\n继续旅行，尝试与当地人交流吧。");
+        return;
+    }
+    const content=words.map(word=>word.spanish+" — "+word.chinese).join("\n");
+    DialogueSystem.show("你的西班牙语词汇本\n\n"+content);
+};
+
+WordSystem.test=function(){
+    const learned=WordSystem.getLearned();
+    if(learned.length===0){
+        DialogueSystem.show("今天还没有学会新词。\n明天继续努力吧。");
+        return;
+    }
+    const questions=learned.slice(-3);
+    let index=0,correct=0;
+    function nextQuestion(){
+        if(index>=questions.length){
+            game.resources.mood=clamp(game.resources.mood+correct*2);
+            DialogueSystem.show("词汇小测完成！\n\n答对："+correct+"/"+questions.length+"\n\n你正在逐渐适应这里的语言。");
+            return;
+        }
+        const word=questions[index];
+        const wrongOptions=WORD_DATA.filter(w=>w.id!==word.id).sort(()=>Math.random()-.5).slice(0,2);
+        const options=[word,...wrongOptions].sort(()=>Math.random()-.5);
+        dialogueState.active=true;
+        dialogueState.eventId=null;
+        dialogueState.choices=[];
+        document.getElementById("dialog-title").textContent="西班牙语小测 · "+(index+1)+"/"+questions.length;
+        document.getElementById("dialog-content").textContent="「"+word.spanish+"」是什么意思？";
+        const container=document.getElementById("dialog-options");
+        container.innerHTML="";
+        options.forEach(option=>{
+            const button=document.createElement("button");
+            button.className="dialog-option";
+            button.textContent=option.chinese;
+            button.onclick=()=>{
+                if(option.id===word.id){correct++;showStatus("回答正确！");}
+                else showStatus("正确答案："+word.chinese);
+                index++;
+                setTimeout(nextQuestion,350);
+            };
+            container.appendChild(button);
+        });
+        document.getElementById("overlay").classList.add("visible");
+        game.paused=true;
+    }
+    nextQuestion();
+};
+
+const WEATHER_DATA={
+    sunny:{name:"晴天",description:"天空晴朗，适合继续旅行。",speed:1,staminaExtra:0},
+    cloudy:{name:"多云",description:"天空有云，天气比较稳定。",speed:1,staminaExtra:0},
+    light_rain:{name:"小雨",description:"雨水打湿了道路，行走变得困难。",speed:.85,staminaExtra:1},
+    rain:{name:"大雨",description:"雨势较大，最好寻找避雨地点。",speed:.65,staminaExtra:2}
+};
+
+WeatherSystem.forecast=function(){
+    const pain=clamp(game.weather.painLevel,0,3);
+    const probabilities={
+        0:[.60,.30,.10,0],
+        1:[.20,.50,.25,.05],
+        2:[.10,.25,.50,.15],
+        3:[.05,.15,.45,.35]
+    };
+    const names=["sunny","cloudy","light_rain","rain"];
+    const random=Math.random();
+    let accumulated=0,result="cloudy";
+    for(let i=0;i<names.length;i++){
+        accumulated+=probabilities[pain][i];
+        if(random<=accumulated){result=names[i];break;}
+    }
+    game.weather.tomorrow=result;
+    const confidence=["不确定","初步判断","比较可靠","明显的身体预感"][pain];
+    showStatus("明日天气预感："+WEATHER_DATA[result].name+" · "+confidence);
+    return result;
+};
+
+WeatherSystem.update=function(){
+    const weather=WEATHER_DATA[game.weather.today]||WEATHER_DATA.sunny;
+    game.player.speed=CONFIG.playerSpeed*weather.speed;
+};
+
+WeatherSystem.getTomorrowWeather=function(){
+    return game.weather.tomorrow;
+};
+
+WeatherSystem.showForecast=function(){
+    const weather=WEATHER_DATA[game.weather.tomorrow];
+    DialogueSystem.show("关节天气预报\n\n膝盖疼痛等级："+game.weather.painLevel+"/3\n\n明日预测："+weather.name+"\n\n"+weather.description);
+};
+
+let rainParticles=[];
+
+function updateRain(dt){
+    if(game.weather.today!=="rain"&&game.weather.today!=="light_rain"){rainParticles=[];return;}
+    const amount=game.weather.today==="rain"?75:35;
+    while(rainParticles.length<amount){
+        rainParticles.push({x:Math.random()*CONFIG.canvasWidth,y:Math.random()*CONFIG.canvasHeight,speed:180+Math.random()*180});
+    }
+    rainParticles.forEach(p=>{
+        p.x-=35*dt;p.y+=p.speed*dt;
+        if(p.y>CONFIG.canvasHeight){p.y=-10;p.x=Math.random()*CONFIG.canvasWidth;}
+    });
+}
+
+function drawRain(){
+    if(game.weather.today!=="rain"&&game.weather.today!=="light_rain") return;
+    ctx.save();
+    ctx.strokeStyle="rgba(210,225,230,0.48)";
+    ctx.lineWidth=1;
+    rainParticles.forEach(p=>{
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-4,p.y+10);ctx.stroke();
+    });
+    ctx.restore();
+}
+
+let campState={opened:false,cooked:false,slept:false};
+
+CampSystem.open=function(){
+    if(campState.opened) return;
+    campState.opened=true;
+    game.paused=true;
+    document.getElementById("dialog-title").textContent="傍晚 · 扎营";
+    document.getElementById("dialog-content").textContent=
+        "太阳逐渐落到山后。\n你需要整理背包，为明天的旅程做好准备。\n\n"+
+        "体力："+Math.round(game.resources.stamina)+
+        "\n食物："+Math.round(game.resources.food)+
+        "\n心情："+Math.round(game.resources.mood);
+    const options=document.getElementById("dialog-options");
+    options.innerHTML="";
+    function addOption(text,callback){
+        const button=document.createElement("button");
+        button.className="dialog-option";
+        button.textContent=text;
+        button.onclick=callback;
+        options.appendChild(button);
+    }
+    addOption("🍲 做一顿简单的饭",()=>CampSystem.cook());
+    addOption("📖 复习今天学到的西语",()=>WordSystem.test());
+    addOption("📚 查看词汇本",()=>WordSystem.showVocabulary());
+    addOption("🦵 检查关节和明天天气",()=>WeatherSystem.showForecast());
+    addOption("🌙 睡觉，进入下一天",()=>CampSystem.sleep());
+    document.getElementById("overlay").classList.add("visible");
+};
+
+CampSystem.cook=function(){
+    if(campState.cooked){DialogueSystem.show("今天已经做过饭了。\n你可以选择休息或者睡觉。");return;}
+    if(game.resources.food<10){DialogueSystem.show("食物不够了。\n你只能简单整理背包，然后休息。");return;}
+    game.resources.food-=10;
+    game.resources.stamina=clamp(game.resources.stamina+10);
+    game.resources.mood=clamp(game.resources.mood+5);
+    campState.cooked=true;
+    DialogueSystem.show("你用剩下的食材做了一顿简单的晚餐。\n\n体力恢复 10。\n心情恢复 5。\n食物减少 10。");
+};
+
+CampSystem.sleep=function(){
+    if(campState.slept) return;
+    campState.slept=true;
+    game.resources.food-=15;
+    game.resources.stamina=clamp(game.resources.stamina+35);
+    game.resources.mood=clamp(game.resources.mood+5);
+    if(game.resources.food<0){
+        game.resources.food=0;
+        game.resources.stamina=clamp(game.resources.stamina-5);
+    }
+    game.weather.today=game.weather.tomorrow;
+    game.day++;
+    campState={opened:false,cooked:false,slept:false};
+    game.resources.stamina=clamp(game.resources.stamina);
+    game.resources.food=clamp(game.resources.food);
+    game.resources.mood=clamp(game.resources.mood);
+    WeatherSystem.update();
+    updateHUD();
+    autoSave();
+    DialogueSystem.show("新的一天开始了。\n\nDAY "+game.day+"\n\n天气："+WEATHER_DATA[game.weather.today].name+"\n\n你整理好背包，准备继续旅程。");
+    setTimeout(()=>{
+        if(game.day<=7) game.weather.painLevel=Math.min(3,game.weather.painLevel);
+    },100);
+};
+
+CampSystem.rest=function(){
+    game.resources.stamina=clamp(game.resources.stamina+8);
+    game.resources.mood=clamp(game.resources.mood+2);
+    updateHUD();
+    DialogueSystem.show("你坐下来休息了一会儿。\n\n体力恢复 8。\n心情恢复 2。");
+};
+
+function drawNPCs(){
+    NPC_DATA.forEach(npc=>{
+        const x=npc.x*CONFIG.tileSize-game.camera.x;
+        const y=npc.y*CONFIG.tileSize-game.camera.y;
+        ctx.fillStyle="rgba(30,40,30,0.25)";ctx.fillRect(x+5,y+22,17,4);
+        ctx.fillStyle=npc.color;ctx.fillRect(x+6,y+10,13,12);
+        ctx.fillStyle="#e5b992";ctx.fillRect(x+7,y+2,11,10);
+        ctx.fillStyle="#493a30";ctx.fillRect(x+7,y+1,11,4);
+        ctx.font="10px monospace";ctx.textAlign="center";ctx.fillStyle="#fff4da";
+        ctx.fillText(npc.name,x+12,y-5);
+        const distance=Math.hypot(game.player.x-npc.x*CONFIG.tileSize,game.player.y-npc.y*CONFIG.tileSize);
+        if(distance<65){ctx.fillStyle="#f5d58a";ctx.fillText("E",x+12,y-17);}
+    });
+}
+
+const originalRenderWorld=renderWorld;
+renderWorld=function(){
+    originalRenderWorld();
+    drawNPCs();
+    drawRain();
+};
+
+function findNearbyInteractable(){
+    let nearest=null,shortest=65;
+    INTERACTABLES.forEach(item=>{
+        const x=item.x*CONFIG.tileSize,y=item.y*CONFIG.tileSize;
+        const distance=Math.hypot(game.player.x-x,game.player.y-y);
+        if(distance<shortest){shortest=distance;nearest=item;}
+    });
+    return nearest;
+}
+
+function interact(){
+    if(game.paused) return;
+    const item=findNearbyInteractable();
+    if(!item){showStatus("附近没有可以互动的对象");return;}
+    if(item.type==="npc"){
+        if(item.npcId==="elena") EventSystem.trigger("elena_intro");
+        else if(item.npcId==="little_girl") EventSystem.trigger("girl_bread");
+        else if(item.npcId==="mateo") EventSystem.trigger("mateo_intro");
+        else if(item.npcId==="sofia") EventSystem.trigger("sofia_intro");
+    }else if(item.type==="rest"){
+        CampSystem.rest();
+    }else if(item.type==="scenery"){
+        game.resources.mood=clamp(game.resources.mood+5);
+        updateHUD();
+        DialogueSystem.show("你坐在海湾旁边。\n远处的山脉倒映在水面上。\n你觉得这段旅程或许没有想象中那么糟糕。");
+    }
+}
+
+document.addEventListener("keydown",event=>{
+    if((event.code==="KeyE"||event.code==="Enter")&&!event.repeat) interact();
+    if(event.code==="Escape"&&dialogueState.active) DialogueSystem.close();
+});
+
+const DAY1_SEQUENCE={started:false,morningDone:false,bakeryDone:false,girlDone:false,injuryDone:false};
+
+function startDay1(){
+    if(DAY1_SEQUENCE.started) return;
+    DAY1_SEQUENCE.started=true;
+    game.day=1;
+    game.location="Puerto Natales";
+    game.weather.today="sunny";
+    game.weather.painLevel=1;
+    updateHUD();
+    EventSystem.trigger("morning_forecast");
+}
+
+function checkDay1Progress(){
+    if(game.day===1&&!DAY1_SEQUENCE.morningDone&&game.progress.completedEvents.includes("morning_forecast")){
+        DAY1_SEQUENCE.morningDone=true;
+        showStatus("前往面包店，与 Elena 交流");
+    }
+    if(game.day===1&&!DAY1_SEQUENCE.bakeryDone&&game.progress.completedEvents.includes("elena_intro")){
+        DAY1_SEQUENCE.bakeryDone=true;
+        showStatus("试着与面包店外的小女孩交流");
+    }
+    if(game.day===1&&!DAY1_SEQUENCE.girlDone&&game.progress.completedEvents.includes("girl_bread")){
+        DAY1_SEQUENCE.girlDone=true;
+        showStatus("继续探索，感受这座小镇");
+    }
+}
+
+function triggerDay1Injury(){
+    if(game.day===1&&DAY1_SEQUENCE.girlDone&&!DAY1_SEQUENCE.injuryDone){
+        DAY1_SEQUENCE.injuryDone=true;
+        EventSystem.trigger("knee_injury");
+    }
+}
+
+function triggerDailyEvent(eventId){
+    if(game.progress.completedEvents.includes(eventId)) return false;
+    return EventSystem.trigger(eventId);
+}
+
+function checkDailyEvents(){
+    const day=game.day;
+    const schedule={
+        2:["mild_pain"],3:["road_wallet"],4:["strong_pain","broken_fence"],
+        5:["cold_joint","truck_driver"],6:["last_meal"],7:["pain_relief"]
+    };
+    const events=schedule[day];
+    if(!events) return;
+    events.forEach(eventId=>{
+        if(!game.progress.completedEvents.includes(eventId)){
+            // 事件由玩家靠近相应地点或完成当天主线时触发。
+        }
+    });
+}
+
+let movementStaminaTimer=0;
+const originalUpdatePlayer=updatePlayer;
+updatePlayer=function(dt){
+    if(game.paused) return;
+    const wasMoving=game.player.moving;
+    originalUpdatePlayer(dt);
+    if(game.player.moving){
+        movementStaminaTimer+=dt;
+        if(movementStaminaTimer>=12){
+            game.resources.stamina=clamp(game.resources.stamina-1);
+            movementStaminaTimer=0;
+            updateHUD();
+        }
+    }else if(wasMoving){
+        movementStaminaTimer=0;
+    }
+    game.player.speed=CONFIG.playerSpeed;
+    WeatherSystem.update();
+};
+
+function gameLoop(timestamp){
+    if(!game.running) return;
+    if(!game.lastTime) game.lastTime=timestamp;
+    const dt=Math.min((timestamp-game.lastTime)/1000,.05);
+    game.lastTime=timestamp;
+    game.deltaTime=dt;
+    if(!game.paused){
+        game.elapsed+=dt;
+        updatePlayer(dt);
+        updateCamera();
+        updateRain(dt);
+        checkDay1Progress();
+    }
+    renderWorld();
+    requestAnimationFrame(gameLoop);
+}
+
+function resizeGame(){
+    ctx.imageSmoothingEnabled=false;
+    updateCamera();
+}
+window.addEventListener("resize",resizeGame);
+
+setInterval(()=>{
+    if(game.running&&!game.paused&&game.elapsed>5) autoSave();
+},CONFIG.autoSaveInterval);
+
+function initializeGame(){
+    generateMap();
+    const hasSave=Boolean(localStorage.getItem(CONFIG.saveKey));
+    if(hasSave){
+        const loaded=loadGame();
+        if(loaded){
+            updateCamera();
+            updateHUD();
+            showStatus("欢迎回来，继续你的旅程");
+        }else{
+            startDay1();
+        }
+    }else{
+        startDay1();
+    }
+    resizeGame();
+    updateCamera();
+    updateHUD();
+    requestAnimationFrame(gameLoop);
+}
+
+initializeGame();
+
+window.GameDebug={
+    game,events:EVENT_DATA,words:WORD_DATA,npcs:NPC_DATA,
+    save:saveGame,load:loadGame,interact,camp:CampSystem,
+    weather:WeatherSystem,vocabulary:WordSystem,
+    trigger:(id)=>EventSystem.trigger(id),
+    setDay:(day)=>{game.day=clamp(day,1,7);updateHUD();}
+};
+
+</script>
+</body>
+</html>

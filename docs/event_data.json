@@ -1,0 +1,643 @@
+{
+  "EVENT_DATA": {
+    "events": [
+      {
+        "id": "day1_wake_forecast",
+        "title": "醒来与天气预报",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·旅舍房间",
+        "trigger": { "type": "auto", "note": "Day1 开局自动触发，教学预报" },
+        "lines": [
+          { "who": "旁白", "text": "清晨六点，蓬塔阿雷桑斯的窗户被风拍得哐哐响。你膝盖旧伤隐隐发酸。" },
+          { "who": "老托马斯", "text": "今天风大，午后可能有雨。走路当心，别逞强。" },
+          { "who": "你", "text": "（教学：天气预报会影响当天体力消耗与关节疼痛。先记下：风大、午后雨。）" }
+        ],
+        "choices": [
+          { "text": "记下预报，出门。", "effects": {}, "next": "day1_meet_sofia", "reply": "老托马斯点点头：路上慢点。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day1_meet_sofia",
+        "title": "遇见索菲娅",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·街角",
+        "trigger": { "type": "talk", "npc": "索菲娅", "note": "首次与索菲娅对话" },
+        "lines": [
+          { "who": "索菲娅", "text": "Hola（你好）！你是新来的旅行者吗？我叫索菲娅。" },
+          { "who": "你", "text": "你好……我叫……（一时不知道怎么用西语回应）" },
+          { "who": "索菲娅", "text": "跟我念：Hola。就是“你好”。" }
+        ],
+        "choices": [
+          { "text": "Hola（你好）！", "effects": { "mood": 3 }, "reply": "索菲娅笑了：发音不错！" }
+        ],
+        "once": true,
+        "learnWord": "hola"
+      },
+      {
+        "id": "day1_bakery",
+        "title": "玛尔塔的面包店",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·面包店",
+        "trigger": { "type": "talk", "npc": "玛尔塔", "note": "进入面包店" },
+        "lines": [
+          { "who": "玛尔塔", "text": "早上好，旅行者。要面包吗？Pan（面包）。" },
+          { "who": "你", "text": "我……想买一个。多少钱？" },
+          { "who": "玛尔塔", "text": "五百比索。买的时候可以说：Por favor（请）。接过找零说 Gracias（谢谢）。" }
+        ],
+        "choices": [
+          { "text": "Por favor（请），来一个 Pan（面包）。", "effects": { "money": -500, "food": 1 }, "reply": "玛尔塔：Gracias（谢谢）惠顾！" },
+          { "text": "只学说法，不买。", "effects": {}, "reply": "玛尔塔：没关系，Gracias 也送你。" }
+        ],
+        "once": true,
+        "learnWord": "gracias"
+      },
+      {
+        "id": "day1_flashback",
+        "title": "膝盖受伤的闪回",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·石阶",
+        "trigger": { "type": "step", "note": "走过石阶时触发" },
+        "lines": [
+          { "who": "旁白", "text": "脚下一滑，膝盖传来熟悉的刺痛。你想起多年前那次摔倒——周围的人说着你听不懂的话。" },
+          { "who": "路人", "text": "¿Estás bien?（你还好吗？）" },
+          { "who": "你", "text": "我……No entiendo（我不懂）。" }
+        ],
+        "choices": [
+          { "text": "用 No entiendo（我不懂）回应。", "effects": { "stamina": -3, "mood": -2 }, "reply": "路人放慢语速，指了指你的膝盖。" }
+        ],
+        "once": true,
+        "learnWord": "no_entiendo"
+      },
+      {
+        "id": "day1_pan_learn",
+        "title": "补学 Pan",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·面包店",
+        "trigger": { "type": "talk", "npc": "玛尔塔", "note": "day1_bakery 完成后再次对话" },
+        "lines": [
+          { "who": "玛尔塔", "text": "再教你一个词：Pan，就是面包。" },
+          { "who": "你", "text": "Pan（面包）。" }
+        ],
+        "choices": [
+          { "text": "Pan（面包）。", "effects": {}, "reply": "玛尔塔：对，Pan。" }
+        ],
+        "once": true,
+        "learnWord": "pan"
+      },
+      {
+        "id": "day1_por_favor_learn",
+        "title": "补学 Por favor",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·面包店",
+        "trigger": { "type": "talk", "npc": "玛尔塔", "note": "day1_bakery 完成后再次对话" },
+        "lines": [
+          { "who": "玛尔塔", "text": "请人帮忙时要说：Por favor（请）。" },
+          { "who": "你", "text": "Por favor（请）。" }
+        ],
+        "choices": [
+          { "text": "Por favor（请）。", "effects": {}, "reply": "玛尔塔：很好，Por favor。" }
+        ],
+        "once": true,
+        "learnWord": "por_favor"
+      },
+      {
+        "id": "H1_share_bread",
+        "title": "分面包",
+        "day": 1,
+        "scene": "蓬塔阿雷纳斯·街边",
+        "trigger": { "type": "talk", "npc": "索菲娅", "note": "day1_meet_sofia 完成后触发" },
+        "lines": [
+          { "who": "索菲娅", "text": "你手里有面包……我弟弟今天还没吃东西。" },
+          { "who": "你", "text": "（她看着我，眼神很小心。）" }
+        ],
+        "choices": [
+          { "text": "分一半给她。", "effects": { "food": -1, "mood": 5 }, "memory": "sofia_helped", "reply": "索菲娅：Gracias（谢谢）！" },
+          { "text": "不分。", "effects": { "mood": -3 }, "reply": "索菲娅低下头，慢慢走开了。" },
+          { "text": "Por favor（请）让我分给你。", "needWord": "por_favor", "effects": { "mood": 8 }, "memory": "sofia_helped", "reply": "索菲娅愣了一下，笑得特别亮。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day2_road",
+        "title": "问路去纳塔莱斯港",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·公路岔口",
+        "trigger": { "type": "talk", "npc": "豪尔赫", "note": "Day2 公路边遇到豪尔赫" },
+        "lines": [
+          { "who": "豪尔赫", "text": "你要去纳塔莱斯港？先沿着 Camino（路）走。" },
+          { "who": "你", "text": "¿Dónde está?（在哪里？）……我是说，水在哪里？" },
+          { "who": "豪尔赫", "text": "Agua（水）在前面的小店。记住：¿Dónde está? 是“在哪里”。" }
+        ],
+        "choices": [
+          { "text": "Agua（水），¿Dónde está?（在哪里？）", "effects": { "stamina": -3 }, "reply": "豪尔赫指了指前方：Camino（路）一直走。" }
+        ],
+        "once": true,
+        "learnWord": "agua"
+      },
+      {
+        "id": "day2_donde_learn",
+        "title": "补学问路说法",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·公路岔口",
+        "trigger": { "type": "talk", "npc": "豪尔赫", "note": "day2_road 完成后再次对话" },
+        "lines": [
+          { "who": "豪尔赫", "text": "问路就说：¿Dónde está?（在哪里？）" },
+          { "who": "你", "text": "¿Dónde está?（在哪里？）" }
+        ],
+        "choices": [
+          { "text": "¿Dónde está?（在哪里？）", "effects": {}, "reply": "豪尔赫：对，就这样问。" }
+        ],
+        "once": true,
+        "learnWord": "donde"
+      },
+      {
+        "id": "day2_camino_learn",
+        "title": "补学 Camino",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·公路岔口",
+        "trigger": { "type": "talk", "npc": "豪尔赫", "note": "day2_road 完成后再次对话" },
+        "lines": [
+          { "who": "豪尔赫", "text": "Camino，就是路。" },
+          { "who": "你", "text": "Camino（路）。" }
+        ],
+        "choices": [
+          { "text": "Camino（路）。", "effects": {}, "reply": "豪尔赫：沿着 Camino 走就对了。" }
+        ],
+        "once": true,
+        "learnWord": "camino"
+      },
+      {
+        "id": "day2_shop",
+        "title": "小卖部",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·小卖部",
+        "trigger": { "type": "talk", "npc": "店主", "note": "进入小卖部" },
+        "lines": [
+          { "who": "店主", "text": "要买什么？水、面包都有。" },
+          { "who": "你", "text": "¿Cuánto cuesta?（多少钱？）" }
+        ],
+        "choices": [
+          { "text": "¿Cuánto cuesta?（多少钱？）买水。", "effects": { "money": -300, "food": 1, "stamina": 3 }, "reply": "店主：三百比索，Agua（水）拿走。" },
+          { "text": "只问价不买。", "effects": {}, "reply": "店主耸耸肩：问价免费。" }
+        ],
+        "once": true,
+        "learnWord": "cuanto"
+      },
+      {
+        "id": "H2_road_wallet",
+        "title": "路上的钱包",
+        "day": 3,
+        "scene": "蓬塔阿雷纳斯郊外·土路",
+        "trigger": { "type": "step", "note": "Day3 走路途中触发" },
+        "lines": [
+          { "who": "旁白", "text": "路边草丛里有个旧钱包。打开一看，里面有 8000 比索和一张身份证。" },
+          { "who": "你", "text": "（失主一定很着急。）" }
+        ],
+        "choices": [
+          { "text": "交还给失主。", "effects": { "mood": 3 }, "memory": "wallet_returned", "reply": "失主赶来，连声道谢。" },
+          { "text": "留下钱。", "effects": { "money": 8000, "mood": -5 }, "memory": "wallet_kept", "reply": "你把钱包塞进包里，心里有点沉。" },
+          { "text": "次日还回去并道歉。", "needWord": "lo_siento", "effects": { "mood": 2 }, "memory": "wallet_apologized", "reply": "失主收下钱包：没关系，谢谢你送回来。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day3_farm_work",
+        "title": "埃琳娜的农场帮工",
+        "day": 3,
+        "scene": "纳塔莱斯港郊外·农场",
+        "trigger": { "type": "talk", "npc": "埃琳娜", "note": "到达农场" },
+        "lines": [
+          { "who": "埃琳娜", "text": "想挣点路费吗？帮我干半天活。" },
+          { "who": "你", "text": "Trabajo（工作）……Dinero（钱）……Ayuda（帮忙）？" },
+          { "who": "埃琳娜", "text": "哈哈，你说得对：Trabajo 是工作，Dinero 是钱，Ayuda 是帮忙。" }
+        ],
+        "choices": [
+          { "text": "好，我帮你。", "effects": { "stamina": -15, "money": 3000, "food": 1 }, "reply": "埃琳娜：干得不错，这是工钱。" }
+        ],
+        "once": true,
+        "learnWord": "trabajo"
+      },
+      {
+        "id": "day3_dinero_learn",
+        "title": "补学 Dinero",
+        "day": 3,
+        "scene": "纳塔莱斯港郊外·农场",
+        "trigger": { "type": "talk", "npc": "埃琳娜", "note": "day3_farm_work 完成后再次对话" },
+        "lines": [
+          { "who": "埃琳娜", "text": "Dinero，钱。买面包住宿都要用。" },
+          { "who": "你", "text": "Dinero（钱）。" }
+        ],
+        "choices": [
+          { "text": "Dinero（钱）。", "effects": {}, "reply": "埃琳娜：对，Dinero。" }
+        ],
+        "once": true,
+        "learnWord": "dinero"
+      },
+      {
+        "id": "day3_ayuda_learn",
+        "title": "补学 Ayuda",
+        "day": 3,
+        "scene": "纳塔莱斯港郊外·农场",
+        "trigger": { "type": "talk", "npc": "埃琳娜", "note": "day3_farm_work 完成后再次对话" },
+        "lines": [
+          { "who": "埃琳娜", "text": "需要人帮忙就说 Ayuda（帮忙）。" },
+          { "who": "你", "text": "Ayuda（帮忙）。" }
+        ],
+        "choices": [
+          { "text": "Ayuda（帮忙）。", "effects": {}, "reply": "埃琳娜：Ayuda，记住了。" }
+        ],
+        "once": true,
+        "learnWord": "ayuda"
+      },
+      {
+        "id": "day3_lo_siento_learn",
+        "title": "补学 Lo siento",
+        "day": 3,
+        "scene": "纳塔莱斯港·旅舍",
+        "trigger": { "type": "talk", "npc": "老托马斯", "note": "Day3 旅舍对话" },
+        "lines": [
+          { "who": "老托马斯", "text": "做错事要道歉，说 Lo siento（对不起）。" },
+          { "who": "你", "text": "Lo siento（对不起）。" }
+        ],
+        "choices": [
+          { "text": "Lo siento（对不起）。", "effects": {}, "reply": "老托马斯：Lo siento，很好。" }
+        ],
+        "once": true,
+        "learnWord": "lo_siento"
+      },
+      {
+        "id": "day4_rain_night",
+        "title": "雨夜",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍屋檐下",
+        "trigger": { "type": "auto", "note": "Day4 入夜自动触发" },
+        "lines": [
+          { "who": "旁白", "text": "雨下了一整天。Lluvia（雨）敲着铁皮屋顶，Frío（冷）从门缝钻进来。" },
+          { "who": "阿图罗", "text": "孩子，进来吧，Casa（家）里暖和。" },
+          { "who": "你", "text": "Lluvia（雨）……Frío（冷）……Casa（家）。" }
+        ],
+        "choices": [
+          { "text": "进屋躲雨。", "effects": { "stamina": 5, "mood": 2 }, "reply": "阿图罗给你倒了杯热水。" }
+        ],
+        "once": true,
+        "learnWord": "lluvia"
+      },
+      {
+        "id": "day4_frio_learn",
+        "title": "补学 Frío",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍屋檐下",
+        "trigger": { "type": "talk", "npc": "阿图罗", "note": "day4_rain_night 完成后再次对话" },
+        "lines": [
+          { "who": "阿图罗", "text": "Frío，就是冷。雨夜最容易 Frío。" },
+          { "who": "你", "text": "Frío（冷）。" }
+        ],
+        "choices": [
+          { "text": "Frío（冷）。", "effects": {}, "reply": "阿图罗：对，Frío。" }
+        ],
+        "once": true,
+        "learnWord": "frio"
+      },
+      {
+        "id": "day4_casa_learn",
+        "title": "补学 Casa",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍屋檐下",
+        "trigger": { "type": "talk", "npc": "阿图罗", "note": "day4_rain_night 完成后再次对话" },
+        "lines": [
+          { "who": "阿图罗", "text": "Casa，家。出门在外，有个 Casa 很重要。" },
+          { "who": "你", "text": "Casa（家）。" }
+        ],
+        "choices": [
+          { "text": "Casa（家）。", "effects": {}, "reply": "阿图罗：Casa，记住了。" }
+        ],
+        "once": true,
+        "learnWord": "casa"
+      },
+      {
+        "id": "H4_blanket",
+        "title": "毯子",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍大厅",
+        "trigger": { "type": "talk", "npc": "阿图罗", "note": "day4_rain_night 之后" },
+        "lines": [
+          { "who": "旁白", "text": "旅舍只有一条毯子。阿图罗老人坐在角落里发抖。" },
+          { "who": "阿图罗", "text": "你年轻，扛得住……我这条老骨头不行了。" }
+        ],
+        "choices": [
+          { "text": "把毯子让给老人。", "effects": { "mood": 4 }, "memory": "blanket_given", "reply": "阿图罗裹紧毯子：谢谢你，孩子。" },
+          { "text": "自己用。", "effects": { "mood": -2 }, "reply": "你裹着毯子，却听见老人轻轻咳嗽。" },
+          { "text": "Frío（冷）……我们分一半吧。", "needWord": "frio", "effects": { "mood": 6 }, "memory": "blanket_shared", "reply": "阿图罗笑了：分一半，暖和。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day4_knee_pain_night",
+        "title": "雨夜膝盖剧痛",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍房间",
+        "trigger": { "type": "auto", "note": "Day4 深夜自动触发，文本按 H4 选择变化" },
+        "lines": [
+          { "who": "旁白", "text": "半夜，膝盖像被钉子扎。你想起白天的雨和冷。" },
+          { "who": "旁白", "text": "【分支：若 memory=blanket_given】老人把毯子盖回你腿上：“你让了我，现在轮到我。”你喝到一杯热牛奶，疼痛缓了些。" },
+          { "who": "旁白", "text": "【分支：若 memory=blanket_shared】你们分过的毯子还在，阿图罗端来热牛奶：“分一半的人，也该分一半暖和。”" },
+          { "who": "旁白", "text": "【分支：无上述 memory 或 blanket_self】没有人来。你自己爬起来，用热水敷膝盖，疼得睡不着。" }
+        ],
+        "choices": [
+          { "text": "忍着，继续睡。", "effects": { "stamina": -5, "mood": -2 }, "reply": "疼痛慢慢退去，天也快亮了。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day2_forecast_proved",
+        "title": "预报应验",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·公路",
+        "trigger": { "type": "auto", "note": "Day2 午后自动触发" },
+        "lines": [
+          { "who": "旁白", "text": "午后果然起风下雨。你想起老托马斯早上的话，提前找了屋檐。" },
+          { "who": "你", "text": "（预报是真的。）" }
+        ],
+        "choices": [
+          { "text": "庆幸自己听了预报。", "effects": { "mood": 3 }, "reply": "你躲过一场雨，心情不错。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day5_wind",
+        "title": "隘口的风",
+        "day": 5,
+        "scene": "纳塔莱斯港外·山口",
+        "trigger": { "type": "talk", "npc": "佩德罗", "note": "Day5 山口遇到佩德罗" },
+        "lines": [
+          { "who": "佩德罗", "text": "Viento（风）太大了，Peligro（危险）！走慢点，Despacio（慢）。" },
+          { "who": "你", "text": "Viento（风）……Peligro（危险）……Despacio（慢）。" }
+        ],
+        "choices": [
+          { "text": "Despacio（慢）点走。", "effects": { "stamina": -3, "mood": 2 }, "reply": "佩德罗：对，Despacio。" }
+        ],
+        "once": true,
+        "learnWord": "viento"
+      },
+      {
+        "id": "day5_peligro_learn",
+        "title": "补学 Peligro",
+        "day": 5,
+        "scene": "纳塔莱斯港外·山口",
+        "trigger": { "type": "talk", "npc": "佩德罗", "note": "day5_wind 完成后再次对话" },
+        "lines": [
+          { "who": "佩德罗", "text": "Peligro，危险。风大时别靠近崖边。" },
+          { "who": "你", "text": "Peligro（危险）。" }
+        ],
+        "choices": [
+          { "text": "Peligro（危险）。", "effects": {}, "reply": "佩德罗：对，Peligro。" }
+        ],
+        "once": true,
+        "learnWord": "peligro"
+      },
+      {
+        "id": "day5_despacio_learn",
+        "title": "补学 Despacio",
+        "day": 5,
+        "scene": "纳塔莱斯港外·山口",
+        "trigger": { "type": "talk", "npc": "佩德罗", "note": "day5_wind 完成后再次对话" },
+        "lines": [
+          { "who": "佩德罗", "text": "Despacio，慢。风里走路要 Despacio。" },
+          { "who": "你", "text": "Despacio（慢）。" }
+        ],
+        "choices": [
+          { "text": "Despacio（慢）。", "effects": {}, "reply": "佩德罗：对，Despacio。" }
+        ],
+        "once": true,
+        "learnWord": "despacio"
+      },
+      {
+        "id": "H3_hitchhike",
+        "title": "搭车",
+        "day": 5,
+        "scene": "纳塔莱斯港外·公路",
+        "trigger": { "type": "talk", "npc": "豪尔赫", "note": "Day5 豪尔赫的卡车停下" },
+        "lines": [
+          { "who": "豪尔赫", "text": "上来吧，我载你一段。风太大了。" },
+          { "who": "你", "text": "（卡车斗里全是风。）" }
+        ],
+        "choices": [
+          { "text": "搭车。", "effects": { "stamina": 20, "mood": -2 }, "memory": "took_ride", "reply": "豪尔赫：坐稳了！" },
+          { "text": "拒绝，自己走。", "effects": { "stamina": -15, "mood": 5 }, "reply": "豪尔赫耸耸肩：那你保重。" },
+          { "text": "Despacio（慢）点开，我挡风。", "needWord": "despacio", "effects": { "stamina": -5, "mood": 5 }, "memory": "jorge_shield", "reply": "豪尔赫放慢车速：你这人真有意思。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day6_night_talk",
+        "title": "夜话",
+        "day": 6,
+        "scene": "纳塔莱斯港·篝火旁",
+        "trigger": { "type": "talk", "npc": "露西娅", "note": "Day6 夜晚篝火" },
+        "lines": [
+          { "who": "露西娅", "text": "Amigo（朋友），明天 Mañana（明天）你就要走了吧？" },
+          { "who": "你", "text": "Amigo（朋友）……Mañana（明天）……Hasta luego（回头见）。" },
+          { "who": "露西娅", "text": "对，Hasta luego，回头见。" }
+        ],
+        "choices": [
+          { "text": "Amigo（朋友），Mañana（明天）见。", "effects": { "mood": 4 }, "reply": "露西娅笑着碰了碰你的杯子。" }
+        ],
+        "once": true,
+        "learnWord": "amigo"
+      },
+      {
+        "id": "day6_manana_learn",
+        "title": "补学 Mañana",
+        "day": 6,
+        "scene": "纳塔莱斯港·篝火旁",
+        "trigger": { "type": "talk", "npc": "露西娅", "note": "day6_night_talk 完成后再次对话" },
+        "lines": [
+          { "who": "露西娅", "text": "Mañana，明天。也可以指上午。" },
+          { "who": "你", "text": "Mañana（明天）。" }
+        ],
+        "choices": [
+          { "text": "Mañana（明天）。", "effects": {}, "reply": "露西娅：对，Mañana。" }
+        ],
+        "once": true,
+        "learnWord": "manana"
+      },
+      {
+        "id": "day6_hasta_luego_learn",
+        "title": "补学 Hasta luego",
+        "day": 6,
+        "scene": "纳塔莱斯港·篝火旁",
+        "trigger": { "type": "talk", "npc": "露西娅", "note": "day6_night_talk 完成后再次对话" },
+        "lines": [
+          { "who": "露西娅", "text": "告别说 Hasta luego（回头见）。" },
+          { "who": "你", "text": "Hasta luego（回头见）。" }
+        ],
+        "choices": [
+          { "text": "Hasta luego（回头见）。", "effects": {}, "reply": "露西娅：Hasta luego。" }
+        ],
+        "once": true,
+        "learnWord": "hasta_luego"
+      },
+      {
+        "id": "H5_last_bread",
+        "title": "最后一块面包",
+        "day": 6,
+        "scene": "纳塔莱斯港·篝火旁",
+        "trigger": { "type": "talk", "npc": "露西娅", "note": "day6_night_talk 之后" },
+        "lines": [
+          { "who": "旁白", "text": "包里只剩最后一块面包。露西娅的肚子叫了一声。" },
+          { "who": "露西娅", "text": "没事，我不饿。" }
+        ],
+        "choices": [
+          { "text": "分给她。", "effects": { "food": -1, "mood": 6 }, "memory": "bread_shared", "reply": "露西娅：谢谢你，朋友。" },
+          { "text": "不分。", "effects": { "mood": -4 }, "reply": "你背过身吃掉面包，心里不是滋味。" },
+          { "text": "Amigo（朋友），一起吃。", "needWord": "amigo", "effects": { "mood": 8 }, "memory": "bread_amigo", "reply": "露西娅大笑：Amigo！" }
+        ],
+        "once": true
+      },
+      {
+        "id": "day7_farewell",
+        "title": "码头告别",
+        "day": 7,
+        "scene": "纳塔莱斯港·码头",
+        "trigger": { "type": "talk", "npc": "卡洛斯", "note": "Day7 码头" },
+        "lines": [
+          { "who": "卡洛斯", "text": "船要开了。Adiós（再见），Buen viaje（一路顺风）。" },
+          { "who": "你", "text": "Adiós（再见）……Buen viaje（一路顺风）。" }
+        ],
+        "choices": [
+          { "text": "Adiós，Buen viaje。", "effects": { "mood": 5 }, "reply": "卡洛斯挥手：Buen viaje！" }
+        ],
+        "once": true,
+        "learnWord": "adios"
+      },
+      {
+        "id": "day7_buen_viaje_learn",
+        "title": "补学 Buen viaje",
+        "day": 7,
+        "scene": "纳塔莱斯港·码头",
+        "trigger": { "type": "talk", "npc": "卡洛斯", "note": "day7_farewell 完成后再次对话" },
+        "lines": [
+          { "who": "卡洛斯", "text": "送人远行说 Buen viaje，一路顺风。" },
+          { "who": "你", "text": "Buen viaje（一路顺风）。" }
+        ],
+        "choices": [
+          { "text": "Buen viaje（一路顺风）。", "effects": {}, "reply": "卡洛斯：Buen viaje。" }
+        ],
+        "once": true,
+        "learnWord": "buen_viaje"
+      },
+      {
+        "id": "day7_ending",
+        "title": "码头结尾",
+        "day": 7,
+        "scene": "纳塔莱斯港·码头",
+        "trigger": { "type": "auto", "note": "Day7 学完 farewell 后自动触发，按 memories 汇总" },
+        "lines": [
+          { "who": "旁白", "text": "船笛响了。你回头看了一眼这七天走过的路。" },
+          { "who": "旁白", "text": "【cond: memory=sofia_helped】索菲娅跑来，塞给你一小包饼干：“Hola，朋友！”" },
+          { "who": "旁白", "text": "【cond: memory=wallet_returned】失主站在人群里，朝你举了举帽子。" },
+          { "who": "旁白", "text": "【cond: memory=wallet_kept】你摸了摸口袋，那 8000 比索还在，但心里空了一块。" },
+          { "who": "旁白", "text": "【cond: memory=wallet_apologized】失主寄来一封信：“Lo siento 说出口的人，值得信任。”" },
+          { "who": "旁白", "text": "【cond: memory=blanket_given】阿图罗托人带来一条旧毯子：“路上冷。”" },
+          { "who": "旁白", "text": "【cond: memory=blanket_shared】阿图罗在信里写：“分一半的人，走到哪里都不孤单。”" },
+          { "who": "旁白", "text": "【cond: memory=took_ride】豪尔赫的卡车在远处按了两声喇叭。" },
+          { "who": "旁白", "text": "【cond: memory=jorge_shield】豪尔赫喊：“Despacio！下次还坐我的车！”" },
+          { "who": "旁白", "text": "【cond: memory=bread_shared 或 memory=bread_amigo】露西娅在岸上挥手：“Amigo！Hasta luego！”" },
+          { "who": "旁白", "text": "【成就：若 memories 中含 sofia_helped、wallet_returned、blanket_given、bread_shared 中至少 3 个 → 解锁“蓬塔阿雷纳斯的好人”】" }
+        ],
+        "choices": [
+          { "text": "上船。", "effects": { "mood": 10 }, "reply": "Adiós，蓬塔阿雷纳斯。Buen viaje，下一章。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R1_wildflower",
+        "title": "野花",
+        "day": 2,
+        "scene": "蓬塔阿雷纳斯·路边",
+        "trigger": { "type": "step", "note": "随机事件，走路时触发" },
+        "lines": [
+          { "who": "旁白", "text": "路边开着一丛不知名的野花，风一吹就晃。" }
+        ],
+        "choices": [
+          { "text": "采一朵。", "effects": { "mood": 2 }, "reply": "你把花别在包上，心情好了点。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R2_lost_sheep",
+        "title": "迷路的羊",
+        "day": 3,
+        "scene": "纳塔莱斯港郊外·草场",
+        "trigger": { "type": "step", "note": "随机事件" },
+        "lines": [
+          { "who": "旁白", "text": "一只羊卡在铁丝网边，咩咩直叫。" }
+        ],
+        "choices": [
+          { "text": "帮它解开。", "effects": { "stamina": -3, "mood": 3 }, "reply": "羊跑了，你拍了拍手上的土。" },
+          { "text": "不管。", "effects": {}, "reply": "你走开了，羊叫声越来越远。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R3_parrot",
+        "title": "鹦鹉",
+        "day": 4,
+        "scene": "纳塔莱斯港·旅舍院子",
+        "trigger": { "type": "step", "note": "随机事件" },
+        "lines": [
+          { "who": "旁白", "text": "一只鹦鹉落在晾衣绳上，冲你歪头。" }
+        ],
+        "choices": [
+          { "text": "逗它玩。", "effects": { "mood": 4 }, "reply": "鹦鹉学舌：“Hola！Hola！”" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R4_shoelace",
+        "title": "鞋带",
+        "day": 5,
+        "scene": "纳塔莱斯港外·山路",
+        "trigger": { "type": "step", "note": "随机事件" },
+        "lines": [
+          { "who": "旁白", "text": "鞋带松了，你低头看了一眼。" }
+        ],
+        "choices": [
+          { "text": "不管，继续走。", "effects": { "stamina": -5, "mood": -2 }, "reply": "你绊了一下，膝盖磕在石头上。" },
+          { "text": "蹲下系好。", "effects": {}, "reply": "你系好鞋带，继续赶路。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R5_apple_tree",
+        "title": "苹果树",
+        "day": 6,
+        "scene": "纳塔莱斯港·路边果园",
+        "trigger": { "type": "step", "note": "随机事件" },
+        "lines": [
+          { "who": "旁白", "text": "路边一棵苹果树，果子熟得发红。" }
+        ],
+        "choices": [
+          { "text": "摘几个。", "effects": { "food": 2, "mood": 2 }, "reply": "你摘了苹果，塞进包里。" },
+          { "text": "不摘，留给别人。", "effects": { "mood": 3 }, "reply": "你看了两眼，走了。" }
+        ],
+        "once": true
+      },
+      {
+        "id": "R6_stars",
+        "title": "星空",
+        "day": 6,
+        "scene": "纳塔莱斯港·营地",
+        "trigger": { "type": "auto", "note": "随机事件，夜晚触发" },
+        "lines": [
+          { "who": "旁白", "text": "这里的夜空低得吓人，星星铺满头顶。" }
+        ],
+        "choices": [
+          { "text": "看一会儿星星。", "effects": { "mood": 5 }, "reply": "你躺下来，忘了膝盖的疼。" }
+        ],
+        "once": true
+      }
+    ]
+  }
+}
